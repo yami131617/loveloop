@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Heart, X, Sparkles, Flame, Gamepad2 } from "lucide-react";
 import { api, type Card, hasToken } from "@/lib/api";
@@ -10,7 +11,7 @@ export default function DiscoverPage() {
   const router = useRouter();
   const [cards, setCards] = useState<Card[]>([]);
   const [idx, setIdx] = useState(0);
-  const [matchBanner, setMatchBanner] = useState<string | null>(null);
+  const [matchBanner, setMatchBanner] = useState<{ name: string; matchId: string } | null>(null);
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
@@ -25,9 +26,8 @@ export default function DiscoverPage() {
     setIdx((i) => i + 1);
     try {
       const r = await api.swipe(target.id, action);
-      if (r.matched) {
-        setMatchBanner(target.display_name ?? target.username);
-        setTimeout(() => setMatchBanner(null), 3000);
+      if (r.matched && r.match?.id) {
+        setMatchBanner({ name: target.display_name ?? target.username, matchId: r.match.id });
       }
     } catch {}
   }
@@ -91,9 +91,10 @@ export default function DiscoverPage() {
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
+            onClick={() => setMatchBanner(null)}
           >
-            <div className="glass rounded-3xl px-8 py-10 text-center max-w-xs">
+            <div className="glass rounded-3xl px-8 py-10 text-center max-w-xs" onClick={(e) => e.stopPropagation()}>
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
@@ -104,10 +105,27 @@ export default function DiscoverPage() {
               <h2 className="text-3xl font-black bg-gradient-to-r from-pink-300 to-purple-300 text-transparent bg-clip-text mb-2">
                 It&apos;s a match!
               </h2>
-              <p className="text-white/70">you and {matchBanner} locked in 💫</p>
-              <button className="mt-6 btn-gradient-pink w-full py-3 rounded-full font-bold flex items-center justify-center gap-2">
-                <Gamepad2 className="w-5 h-5" /> Play a mini-game
-              </button>
+              <p className="text-white/70 mb-6">you and {matchBanner.name} locked in 💫</p>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={`/play/quiz/${matchBanner.matchId}`}
+                  className="btn-gradient-pink w-full py-3 rounded-full font-bold flex items-center justify-center gap-2"
+                >
+                  <Gamepad2 className="w-5 h-5" /> Play a mini-game
+                </Link>
+                <Link
+                  href={`/chats/${matchBanner.matchId}`}
+                  className="glass w-full py-3 rounded-full font-semibold"
+                >
+                  Say hi 💬
+                </Link>
+                <button
+                  onClick={() => setMatchBanner(null)}
+                  className="text-xs text-white/50 hover:text-white/80 mt-1"
+                >
+                  Keep swiping
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

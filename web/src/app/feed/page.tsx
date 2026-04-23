@@ -7,20 +7,53 @@ import { Heart, MessageCircle, Share2, Music2, Volume2, VolumeX, Sparkles, Compa
 import { api, hasToken, mediaUrl, type Post } from "@/lib/api";
 import { BottomNav } from "@/components/BottomNav";
 
+const PAGE_SIZE = 20;
+
 export default function FeedPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [meId, setMeId] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
     api.me().then((r) => setMeId(r.user.id)).catch(() => {});
-    api.getFeed(20)
-      .then((r) => setPosts(r.posts))
+    api.getFeed(PAGE_SIZE, 0)
+      .then((r) => {
+        setPosts(r.posts);
+        setHasMore(r.posts.length === PAGE_SIZE);
+      })
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
   }, [router]);
+
+  // Infinite scroll: load more when sentinel enters viewport
+  useEffect(() => {
+    if (!sentinelRef.current || loading || !hasMore) return;
+    const el = sentinelRef.current;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !loadingMore && hasMore) {
+        setLoadingMore(true);
+        api.getFeed(PAGE_SIZE, posts.length)
+          .then((r) => {
+            // Dedupe in case backend returns overlap
+            setPosts((prev) => {
+              const ids = new Set(prev.map((p) => p.id));
+              const next = r.posts.filter((p) => !ids.has(p.id));
+              return [...prev, ...next];
+            });
+            setHasMore(r.posts.length === PAGE_SIZE);
+          })
+          .catch(() => {})
+          .finally(() => setLoadingMore(false));
+      }
+    }, { rootMargin: "400px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [posts.length, loading, hasMore, loadingMore]);
 
   return (
     <div className="relative min-h-screen pb-28 lg:pb-10">
@@ -54,7 +87,19 @@ export default function FeedPage() {
           ) : posts.length === 0 ? (
             <EmptyFeed />
           ) : (
-            posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} meId={meId} />)
+            <>
+              {posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} meId={meId} />)}
+              {/* Sentinel: when visible, fetch next page */}
+              <div ref={sentinelRef} className="h-4" />
+              {loadingMore && (
+                <div className="text-center text-white/40 text-sm py-6">loading more…</div>
+              )}
+              {!hasMore && posts.length > 0 && (
+                <div className="text-center text-white/30 text-xs py-6">
+                  ✨ you&apos;re all caught up
+                </div>
+              )}
+            </>
           )}
         </div>
 

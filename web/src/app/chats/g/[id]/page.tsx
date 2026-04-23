@@ -24,6 +24,7 @@ export default function GroupChatPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [leaveConfirm, setLeaveConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -92,8 +93,8 @@ export default function GroupChatPage() {
     } finally { setSending(false); }
   }
 
-  async function leave() {
-    if (!meId || !confirm("Leave this group?")) return;
+  async function confirmLeave() {
+    if (!meId) return;
     await api.leaveGroup(groupId, meId).catch(() => {});
     router.replace("/chats");
   }
@@ -148,7 +149,7 @@ export default function GroupChatPage() {
               </Link>
             ))}
             <button
-              onClick={leave}
+              onClick={() => setLeaveConfirm(true)}
               className="text-xs font-bold text-rose-300 hover:text-rose-200 px-2.5 py-1 ml-auto"
             >
               Leave
@@ -239,6 +240,42 @@ export default function GroupChatPage() {
           </button>
         </div>
       </div>
+
+      {/* Leave confirm modal */}
+      {leaveConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+          onClick={() => setLeaveConfirm(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass rounded-3xl p-6 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-black text-lg mb-1">Leave {group.name}?</h3>
+            <p className="text-sm text-white/70 mb-5">
+              You won&apos;t receive messages from this group anymore. An admin can re-add you later.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setLeaveConfirm(false)}
+                className="flex-1 glass rounded-full py-3 font-bold text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLeave}
+                className="flex-1 bg-rose-500 hover:bg-rose-600 rounded-full py-3 font-bold text-sm text-white"
+              >
+                Leave group
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

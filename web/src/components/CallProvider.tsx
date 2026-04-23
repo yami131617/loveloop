@@ -18,9 +18,12 @@ export function useCall() {
   return c;
 }
 
+const RING_TIMEOUT_MS = 30_000;
+
 export function CallProvider({ children }: { children: ReactNode }) {
   const [incoming, setIncoming] = useState<Incoming | null>(null);
   const [active, setActive] = useState<Active | null>(null);
+  const [callStatus, setCallStatus] = useState<"ringing" | "answered" | null>(null);
 
   useEffect(() => {
     const sock = getSocket();
@@ -33,23 +36,49 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }
       setIncoming(p);
     };
-    const onDeclined = () => {
-      // Caller side: peer declined → dismiss active
-      setActive(null);
-    };
+    const onDeclined = () => setActive(null);
+    const onAccepted = () => setCallStatus("answered");  // peer picked up
+    const onEnded = () => setActive(null);
     sock.on("call:incoming", onIncoming);
     sock.on("call:declined", onDeclined);
+    sock.on("call:accepted", onAccepted);
+    sock.on("call:ended", onEnded);
     return () => {
       sock.off("call:incoming", onIncoming);
       sock.off("call:declined", onDeclined);
+      sock.off("call:accepted", onAccepted);
+      sock.off("call:ended", onEnded);
     };
   }, [active]);
+
+  // Caller-side: auto-hangup if peer hasn't answered within RING_TIMEOUT_MS
+  useEffect(() => {
+    if (!active || active.role !== "caller" || callStatus === "answered") return;
+    const t = window.setTimeout(() => {
+      const sock = getSocket();
+      if (sock) sock.emit("call:end", { toUserId: active.peerId });
+      setActive(null);
+    }, RING_TIMEOUT_MS);
+    return () => window.clearTimeout(t);
+  }, [active, callStatus]);
+
+  // Callee-side: if user doesn't accept within RING_TIMEOUT_MS, auto-dismiss the prompt
+  useEffect(() => {
+    if (!incoming) return;
+    const t = window.setTimeout(() => {
+      const sock = getSocket();
+      if (sock) sock.emit("call:decline", { toUserId: incoming.fromUserId });
+      setIncoming(null);
+    }, RING_TIMEOUT_MS);
+    return () => window.clearTimeout(t);
+  }, [incoming]);
 
   const startCall = useCallback((peerId: string, peerName: string, peerAvatar?: string | null, matchId?: string) => {
     const sock = getSocket();
     if (!sock) return;
     sock.emit("call:invite", { toUserId: peerId, fromName: "LoveLoop user", matchId: matchId || null });
     setActive({ role: "caller", peerId, peerName, peerAvatar });
+    setCallStatus("ringing");
   }, []);
 
   function acceptIncoming() {
@@ -61,6 +90,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       peerId: incoming.fromUserId,
       peerName: incoming.fromName || "Someone",
     });
+    setCallStatus("answered");
     setIncoming(null);
   }
 
@@ -87,7 +117,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
           peerId={active.peerId}
           peerName={active.peerName}
           peerAvatar={active.peerAvatar}
-          onEnd={() => setActive(null)}
+          onEnd={() => { setActive(null); setCallStatus(null); }}
         />
       )}
     </CallContext.Provider>

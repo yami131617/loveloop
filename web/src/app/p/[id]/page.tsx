@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share2, Send, Music2, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Share2, Send, Music2, Volume2, VolumeX, MoreHorizontal, Trash2 } from "lucide-react";
 import { api, hasToken, mediaUrl, type Post, type Comment } from "@/lib/api";
 
 export default function PostDetailPage() {
@@ -17,13 +17,28 @@ export default function PostDetailPage() {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
   const [muted, setMuted] = useState(true);
+  const [meId, setMeId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
     loadAll();
+    api.me().then((r) => setMeId(r.user.id)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
+
+  async function deletePost() {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await api.deletePost(postId);
+      router.replace("/me");
+    } catch {
+      setDeleting(false);
+    }
+  }
 
   async function loadAll() {
     try {
@@ -82,6 +97,30 @@ export default function PostDetailPage() {
             <div className="text-[11px] text-white/50">@{post.username}</div>
           </div>
         </Link>
+        {meId === post.user_id && (
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((m) => !m)}
+              className="glass w-10 h-10 rounded-full flex items-center justify-center"
+              aria-label="more"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 top-12 z-50 glass rounded-2xl overflow-hidden min-w-[160px] shadow-2xl">
+                  <button
+                    onClick={() => { setMenuOpen(false); if (confirm("Delete this post? This can't be undone.")) deletePost(); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-rose-300 hover:bg-rose-500/10 transition"
+                  >
+                    <Trash2 className="w-4 h-4" /> {deleting ? "Deleting…" : "Delete post"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar">

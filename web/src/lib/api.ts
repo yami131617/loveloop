@@ -164,6 +164,7 @@ export const api = {
   postComment: (postId: string, content: string) =>
     req<{ comment: Comment }>("POST", `/posts/${postId}/comment`, { content }),
   follow: (userId: string) => req<{ following: boolean }>("POST", `/posts/follow/${userId}`),
+  deletePost: (postId: string) => req<{ success: boolean }>("DELETE", `/posts/${postId}`),
 
   // preferences
   getPrefs: () => req<Prefs>("GET", "/preferences"),
