@@ -57,14 +57,25 @@ export default function FeedPage() {
 
   return (
     <div className="relative min-h-screen pb-28 lg:pb-10">
-      {/* MOBILE header (sticky pink bar). Hidden on desktop because sidebar covers branding. */}
-      <header className="lg:hidden sticky top-0 z-30 backdrop-blur-lg bg-black/20 px-6 py-4 flex justify-between items-center max-w-md mx-auto">
-        <h1 className="text-2xl font-black bg-gradient-to-r from-pink-300 via-fuchsia-300 to-purple-300 text-transparent bg-clip-text">
-          LoveLoop
-        </h1>
-        <Link href="/discover" className="glass w-10 h-10 rounded-full flex items-center justify-center hover:bg-pink-500/20 transition" aria-label="Swipe">
-          <Compass className="w-5 h-5 text-pink-300" />
-        </Link>
+      {/* MOBILE header (sticky). Hidden on desktop because sidebar covers branding.
+          Uses solid dark background (not transparent glass) so it stays legible over
+          bright post images that scroll behind it. */}
+      <header
+        className="lg:hidden sticky top-0 z-30 border-b border-white/5"
+        style={{
+          backgroundColor: "rgba(18, 8, 33, 0.92)",
+          backdropFilter: "blur(20px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.4)",
+        }}
+      >
+        <div className="max-w-md mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-black bg-gradient-to-r from-pink-300 via-fuchsia-300 to-purple-300 text-transparent bg-clip-text">
+            LoveLoop
+          </h1>
+          <Link href="/discover" className="glass w-10 h-10 rounded-full flex items-center justify-center hover:bg-pink-500/20 transition" aria-label="Swipe">
+            <Compass className="w-5 h-5 text-pink-300" />
+          </Link>
+        </div>
       </header>
 
       {/* DESKTOP: center column + right aside, proper web feed layout */}

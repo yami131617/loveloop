@@ -224,7 +224,7 @@ export default function RoomDetailPage() {
         })}
       </div>
 
-      <div className="px-4 py-3 border-t border-white/10 bg-black/30 backdrop-blur-lg">
+      <div className="px-4 py-3 border-t border-white/10 bg-[#120821]/92 backdrop-blur-xl">
         <div className="glass rounded-full flex items-center gap-2 px-4 py-2">
           <button onClick={() => fileRef.current?.click()} className="text-white/60 hover:text-pink-300 transition" aria-label="attach">
             <ImageIcon className="w-5 h-5" />

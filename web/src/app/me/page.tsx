@@ -86,6 +86,10 @@ export default function MePage() {
           <StatCard label="Gems" value={user.gems_balance ?? 0} gradient="from-cyan-400 to-blue-500" />
         </div>
 
+        {/* Level XP progress — explains what "Lv 1" means */}
+        <LevelProgress user={user} />
+
+
         <div className="flex gap-2 mt-8 border-b border-white/10">
           <TabBtn active={tab === "posts"} onClick={() => setTab("posts")} icon={<Grid3x3 className="w-4 h-4" />} label="Posts" />
           <TabBtn active={tab === "liked"} onClick={() => setTab("liked")} icon={<Heart className="w-4 h-4" />} label="Liked" />
@@ -134,6 +138,45 @@ export default function MePage() {
 
       <BottomNav />
     </div>
+  );
+}
+
+// XP needed for level N: 100 * N^1.5 (matches backend utils/economy.js)
+function xpForLevel(lv: number) { return Math.round(100 * Math.pow(lv, 1.5)); }
+
+function LevelProgress({ user }: { user: User }) {
+  const level = user.level ?? 1;
+  const xp = user.total_xp ?? 0;
+  const thisLevelXp = xpForLevel(level);
+  const nextLevelXp = xpForLevel(level + 1);
+  const progressXp = Math.max(0, xp - thisLevelXp);
+  const needed = nextLevelXp - thisLevelXp;
+  const pct = Math.min(100, Math.round((progressXp / needed) * 100));
+
+  return (
+    <details className="glass rounded-3xl mt-3 group [&_summary::-webkit-details-marker]:hidden">
+      <summary className="list-none cursor-pointer px-5 py-3 flex items-center gap-3 hover:bg-white/5 rounded-3xl transition">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-bold text-white/70">LEVEL {level}</span>
+            <span className="text-[10px] text-white/40">{progressXp}/{needed} XP to Lv {level + 1}</span>
+          </div>
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              className="h-full bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500"
+            />
+          </div>
+        </div>
+        <span className="text-[10px] font-bold text-pink-300 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <div className="px-5 pb-4 pt-1 text-[11px] text-white/60 leading-relaxed">
+        Play mini-games with your matches to earn XP. Formula: <span className="font-mono text-white/80">100 × N^1.5</span> XP per level.
+        Higher levels unlock cosmetics, priority in Discover, and profile badges.
+        {" "}Next milestone: <span className="text-pink-300 font-bold">Lv {level + 1}</span> at {nextLevelXp.toLocaleString()} total XP.
+      </div>
+    </details>
   );
 }
 

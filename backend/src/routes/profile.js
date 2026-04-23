@@ -44,6 +44,26 @@ router.get('/:userId', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Change username — separate endpoint because it needs unique check + stricter rate limit
+const usernameSchema = Joi.object({
+  username: Joi.string().alphanum().min(3).max(20).lowercase().required(),
+});
+
+router.put('/username', verifyToken, perUser({ windowMs: 60 * 60 * 1000, max: 3 }), validate(usernameSchema), async (req, res, next) => {
+  try {
+    const username = req.body.username.toLowerCase();
+    // Already mine? no-op
+    const cur = await query('SELECT username FROM users WHERE id = $1', [req.userId]);
+    if (cur.rowCount === 0) return res.status(404).json({ error: 'User not found' });
+    if (cur.rows[0].username === username) return res.json({ username });
+    // Taken?
+    const taken = await query('SELECT id FROM users WHERE username = $1 AND id <> $2', [username, req.userId]);
+    if (taken.rowCount > 0) return res.status(409).json({ error: 'Username taken', code: 'USERNAME_TAKEN' });
+    await query('UPDATE users SET username = $1, updated_at = NOW() WHERE id = $2', [username, req.userId]);
+    res.json({ username });
+  } catch (err) { next(err); }
+});
+
 router.put('/', verifyToken, perUser({ windowMs: 60_000, max: 20 }), validate(updateSchema), async (req, res, next) => {
   try {
     const userId = req.userId;

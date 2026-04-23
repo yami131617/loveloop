@@ -26,7 +26,14 @@ export function BottomNav() {
   return (
     <nav data-mobile-nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto px-3 pb-3 pt-2">
-        <div className="glass rounded-3xl shadow-2xl grid grid-cols-5 items-stretch p-1.5 gap-1">
+        <div
+          className="rounded-3xl shadow-2xl grid grid-cols-5 items-stretch p-1.5 gap-1 border border-white/10"
+          style={{
+            backgroundColor: "rgba(18, 8, 33, 0.92)",
+            backdropFilter: "blur(24px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+          }}
+        >
           {tabs.map((t) => {
             const match = t.match ?? [t.href];
             const active = match.some((m) => pathname === m || pathname.startsWith(m + "/"));

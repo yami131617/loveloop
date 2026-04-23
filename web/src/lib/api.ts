@@ -127,6 +127,8 @@ export const api = {
     req<{ profile: User; interests: string[]; photos: { url: string; is_primary: boolean }[] }>("GET", `/profile/${userId}`),
   updateProfile: (data: Partial<User> & { interests?: string[] }) =>
     req<{ user: User }>("PUT", "/profile/", data),
+  changeUsername: (username: string) =>
+    req<{ username: string }>("PUT", "/profile/username", { username }),
 
   // swipe
   getCards: (limit = 10) => req<{ cards: Card[] }>("GET", `/swipe/cards?limit=${limit}`),
