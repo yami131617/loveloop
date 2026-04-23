@@ -45,4 +45,17 @@ function signToken(payload) {
 
 function clearBanCache(id) { if (id) bannedCache.delete(id); else bannedCache.clear(); }
 
-module.exports = { verifyToken, signToken, clearBanCache };
+// optionalAuth: attach userId if token provided & valid, otherwise continue as anon
+async function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return next();
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
+    req.user = decoded;
+  } catch { /* ignore; treat as anon */ }
+  next();
+}
+
+module.exports = { verifyToken, signToken, clearBanCache, optionalAuth };

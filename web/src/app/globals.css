@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  --bg-from: #1a0e2e;
+  --bg-via: #3d1a6b;
+  --bg-to: #0a0518;
+  --accent-pink: #ff4c8a;
+  --accent-purple: #a855f7;
+  --accent-blue: #60a5fa;
+  --text-primary: #ffffff;
+  --text-muted: #d8c6ff;
+}
+
+@theme inline {
+  --color-bg-from: var(--bg-from);
+  --color-bg-via: var(--bg-via);
+  --color-bg-to: var(--bg-to);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-blue: var(--accent-blue);
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+}
+
+html, body {
+  height: 100%;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background:
+    radial-gradient(80% 60% at 20% 10%, rgba(255, 138, 195, 0.35) 0%, transparent 60%),
+    radial-gradient(70% 60% at 90% 30%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
+    radial-gradient(90% 70% at 50% 90%, rgba(80, 56, 143, 0.45) 0%, transparent 70%),
+    linear-gradient(180deg, var(--bg-from) 0%, var(--bg-via) 40%, var(--bg-to) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Sparkle layer */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6) 50%, transparent 100%),
+    radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,0.5) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,255,255,0.7) 50%, transparent 100%),
+    radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,0.5) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 75%, rgba(255,255,255,0.6) 50%, transparent 100%),
+    radial-gradient(1px 1px at 60% 40%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  background-size: 600px 600px;
+  animation: sparkleDrift 40s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes sparkleDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 600px 600px; }
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient accents */
+.btn-gradient-pink {
+  background: linear-gradient(135deg, #ff4c8a 0%, #ff7ab8 100%);
+  box-shadow: 0 10px 30px -10px rgba(255, 76, 138, 0.6);
+}
+.btn-gradient-purple {
+  background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.6);
+}
+
+/* Scrollbar hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* Page content above sparkle */
+main, .app-content { position: relative; z-index: 1; }

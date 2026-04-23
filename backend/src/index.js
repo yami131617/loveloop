@@ -14,6 +14,7 @@ const chatRoutes = require('./routes/chat');
 const gamesRoutes = require('./routes/games');
 const cosmeticsRoutes = require('./routes/cosmetics');
 const leaderboardRoutes = require('./routes/leaderboard');
+const postsRoutes = require('./routes/posts');
 const errorHandler = require('./middleware/errorHandler');
 const { runMigrations } = require('./scripts/migrate');
 const { setupSocket } = require('./socket');
@@ -21,8 +22,20 @@ const { setupSocket } = require('./socket');
 const app = express();
 const server = http.createServer(app);
 
-app.use(helmet());
-app.use(cors({ origin: (process.env.CORS_ORIGIN || '*').split(','), credentials: true }));
+app.use(helmet({
+  // Allow cross-origin images/videos from /uploads to be embedded in the web client
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false
+}));
+// CORS: allow any origin in dev by echoing it back (browsers reject wildcard when credentials are used).
+app.use(cors({
+  origin: (origin, cb) => {
+    const allowed = (process.env.CORS_ORIGIN || '*').split(',').map(s => s.trim());
+    if (allowed.includes('*') || !origin || allowed.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS: ' + origin));
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '200kb' }));
 
 // Request ID + structured log
@@ -67,6 +80,13 @@ app.use('/chat', chatRoutes);
 app.use('/games', gamesRoutes);
 app.use('/cosmetics', cosmeticsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
+app.use('/posts', postsRoutes);
+
+// Serve uploaded media when Cloudinary not configured (local disk fallback)
+const path = require('path');
+app.use('/uploads', express.static(path.resolve(process.env.UPLOAD_DIR || './uploads'), {
+  maxAge: '30d', immutable: true
+}));
 
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 app.use(errorHandler);

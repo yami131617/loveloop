@@ -19,17 +19,21 @@ async function requireMatchMember(matchId, userId) {
 }
 
 const msgSchema = Joi.object({
-  content: Joi.string().min(1).max(1000).required()
-});
+  content: Joi.string().allow('').max(1000),
+  media_url: Joi.string().uri().allow(null, ''),
+  media_type: Joi.string().valid('image', 'video').allow(null, '')
+}).or('content', 'media_url');
 
 router.post('/:matchId/message', verifyToken, perUser({ windowMs: 60_000, max: 120 }), validate(msgSchema), async (req, res, next) => {
   try {
     await requireMatchMember(req.params.matchId, req.userId);
+    const content = req.body.content || '';
+    const mediaUrl = req.body.media_url || null;
+    const mediaType = req.body.media_type || null;
     const ins = await query(
-      'INSERT INTO messages (match_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
-      [req.params.matchId, req.userId, req.body.content]
+      'INSERT INTO messages (match_id, sender_id, content, media_url, media_type) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [req.params.matchId, req.userId, content, mediaUrl, mediaType]
     );
-    // Emit via Socket.io (attached to app)
     const io = req.app.get('io');
     if (io) io.to(`match:${req.params.matchId}`).emit('message', ins.rows[0]);
     res.status(201).json({ message: ins.rows[0] });

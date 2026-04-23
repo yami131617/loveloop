@@ -9,6 +9,15 @@ builds/
 unity-logs/
 backups/
 
+# Next.js / web
+web/.next/
+web/out/
+web/tsconfig.tsbuildinfo
+
+# Backend runtime data
+backend/uploads/
+
+
 # Unity
 [Ll]ibrary/
 [Tt]emp/

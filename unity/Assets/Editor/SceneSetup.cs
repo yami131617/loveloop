@@ -12,13 +12,10 @@ public static class SceneSetup
     const string SCENE_PATH = "Assets/Scenes/Main.unity";
     const string BACKEND_URL = "https://backend-production-61ee6.up.railway.app";
 
-    // Palette
-    static Color BG = HexColor("#1a0e2e");
-    static Color PANEL = HexColor("#2a1a3e");
-    static Color ACCENT_PINK = HexColor("#ff4d8c");
-    static Color ACCENT_PURPLE = HexColor("#8e4dff");
-    static Color TEXT_LIGHT = HexColor("#f0e8ff");
-    static Color TEXT_MUTED = HexColor("#9b92b4");
+    // Gen Z palette
+    static Color TEXT_LIGHT = HexColor("#ffffff");
+    static Color TEXT_MUTED = HexColor("#e0d0ff");
+    static Color TEXT_ACCENT = HexColor("#ff6aa6");
 
     static SceneSetup()
     {
@@ -35,7 +32,6 @@ public static class SceneSetup
                 if (string.IsNullOrEmpty(active.path))
                 {
                     EditorSceneManager.OpenScene(SCENE_PATH, OpenSceneMode.Single);
-                    Debug.Log("[SceneSetup] auto-opened Main.unity");
                 }
             }
         };
@@ -44,6 +40,10 @@ public static class SceneSetup
     [MenuItem("LoveLoop/Create Main Scene")]
     public static void CreateMainScene()
     {
+        if (!AssetDatabase.IsValidFolder("Assets/Scenes")) AssetDatabase.CreateFolder("Assets", "Scenes");
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
+        AssetDatabase.Refresh();
+
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
         // Systems
@@ -67,14 +67,37 @@ public static class SceneSetup
         new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem),
             typeof(UnityEngine.EventSystems.StandaloneInputModule));
 
-        // BG
-        var bg = CreateRect(canvasGO.transform, "Background");
-        bg.anchorMin = Vector2.zero; bg.anchorMax = Vector2.one; bg.sizeDelta = Vector2.zero;
-        bg.gameObject.AddComponent<Image>().color = BG;
+        // Load sprites
+        var spriteBg = LoadSprite("Background");
+        var spriteCard = LoadSprite("Card");
+        var spriteBtnPink = LoadSprite("BtnPink");
+        var spriteBtnPurple = LoadSprite("BtnPurple");
+        var spriteBtnBlue = LoadSprite("BtnBlue");
+        var spriteBtnMint = LoadSprite("BtnMint");
+        var spriteBtnDark = LoadSprite("BtnDark");
+        var spriteInput = LoadSprite("Input");
+        var spriteHeart = LoadSprite("Heart");
+        var spriteSparkle = LoadSprite("Sparkle");
+        var spriteAvatar = LoadSprite("AvatarDefault");
+        var spriteBubbleMine = LoadSprite("BubbleMine");
+        var spriteBubbleOther = LoadSprite("BubbleOther");
+        var spriteTopBar = LoadSprite("TopBar");
 
-        // Title bar
-        var title = CreateText(canvasGO.transform, "Title", "♥ LOVELOOP ♥", 64,
-            new Vector2(0, 880), 1080, 120, HexColor("#ff6aa6"), FontStyles.Bold);
+        // BG
+        var bg = CreateImage(canvasGO.transform, "Background", spriteBg);
+        FullScreen(bg.rectTransform);
+
+        // Top bar
+        var topBar = CreateImage(canvasGO.transform, "TopBar", spriteTopBar);
+        var tbRT = topBar.rectTransform;
+        tbRT.anchorMin = new Vector2(0, 1); tbRT.anchorMax = new Vector2(1, 1);
+        tbRT.pivot = new Vector2(0.5f, 1);
+        tbRT.sizeDelta = new Vector2(0, 180);
+        tbRT.anchoredPosition = Vector2.zero;
+
+        // Title "♥ LOVELOOP ♥"
+        var title = CreateText(canvasGO.transform, "Title", "♥ LOVELOOP ♥", 72,
+            new Vector2(0, 830), 1000, 140, TEXT_LIGHT, FontStyles.Bold);
         title.alignment = TextAlignmentOptions.Center;
 
         // Panels
@@ -84,88 +107,123 @@ public static class SceneSetup
         var matchesPanel = CreatePanel(canvasGO.transform, "MatchesPanel"); matchesPanel.SetActive(false);
         var chatPanel = CreatePanel(canvasGO.transform, "ChatPanel"); chatPanel.SetActive(false);
 
-        // --- LOGIN ---
-        CreateText(loginPanel.transform, "Heading", "Find your loop", 56,
-            new Vector2(0, 620), 900, 100, TEXT_LIGHT, FontStyles.Bold);
+        // === LOGIN ===
+        CreateText(loginPanel.transform, "Heading", "find your loop ♥", 56,
+            new Vector2(0, 560), 900, 100, TEXT_LIGHT, FontStyles.Bold);
+        CreateText(loginPanel.transform, "Sub", "match · chat · play · level up", 34,
+            new Vector2(0, 490), 900, 60, TEXT_MUTED, FontStyles.Italic);
 
-        var emailInput = CreateInput(loginPanel.transform, "EmailInput", "email@example.com",
-            new Vector2(0, 450), new Vector2(860, 100));
-        var passwordInput = CreateInput(loginPanel.transform, "PasswordInput", "password",
-            new Vector2(0, 320), new Vector2(860, 100));
+        var emailInput = CreateInput(loginPanel.transform, "EmailInput", "@  email",
+            new Vector2(0, 340), new Vector2(900, 130), spriteInput);
+        var passwordInput = CreateInput(loginPanel.transform, "PasswordInput", "●  password",
+            new Vector2(0, 190), new Vector2(900, 130), spriteInput);
         passwordInput.contentType = TMP_InputField.ContentType.Password;
-        var usernameInput = CreateInput(loginPanel.transform, "UsernameInput", "username (register only)",
-            new Vector2(0, 190), new Vector2(860, 100));
+        var usernameInput = CreateInput(loginPanel.transform, "UsernameInput", "♥  username (for register)",
+            new Vector2(0, 40), new Vector2(900, 130), spriteInput);
 
-        var loginBtn = CreateButton(loginPanel.transform, "LoginBtn", "LOGIN",
-            new Vector2(-230, 30), new Vector2(400, 120), ACCENT_PINK);
-        var registerBtn = CreateButton(loginPanel.transform, "RegisterBtn", "REGISTER",
-            new Vector2(230, 30), new Vector2(400, 120), ACCENT_PURPLE);
-        var loginStatus = CreateText(loginPanel.transform, "LoginStatus", "", 32,
-            new Vector2(0, -100), 900, 80, TEXT_MUTED, FontStyles.Italic);
+        var loginBtn = CreateButton(loginPanel.transform, "LoginBtn", "LOG IN ♥",
+            new Vector2(-230, -130), new Vector2(420, 150), spriteBtnPink);
+        var registerBtn = CreateButton(loginPanel.transform, "RegisterBtn", "JOIN ♥",
+            new Vector2(230, -130), new Vector2(420, 150), spriteBtnPurple);
+        var loginStatus = CreateText(loginPanel.transform, "LoginStatus", "", 30,
+            new Vector2(0, -280), 900, 80, TEXT_MUTED, FontStyles.Italic);
 
-        // --- HOME ---
-        var userLabel = CreateText(homePanel.transform, "UserLabel", "Hi!", 48,
-            new Vector2(0, 600), 900, 80, TEXT_LIGHT, FontStyles.Bold);
-        var coinsLabel = CreateText(homePanel.transform, "CoinsLabel", "💰 0", 40,
-            new Vector2(-200, 500), 400, 60, HexColor("#ffd966"), FontStyles.Bold);
-        var gemsLabel = CreateText(homePanel.transform, "GemsLabel", "💎 0", 40,
-            new Vector2(200, 500), 400, 60, HexColor("#66ddff"), FontStyles.Bold);
+        // === HOME ===
+        // Avatar circle
+        var avatarIcon = CreateImage(homePanel.transform, "Avatar", spriteAvatar);
+        var avRT = avatarIcon.rectTransform;
+        avRT.anchorMin = avRT.anchorMax = new Vector2(0.5f, 0.5f);
+        avRT.pivot = new Vector2(0.5f, 0.5f);
+        avRT.sizeDelta = new Vector2(250, 250);
+        avRT.anchoredPosition = new Vector2(0, 550);
 
-        var swipeBtn = CreateButton(homePanel.transform, "GoToSwipeBtn", "💕  DISCOVER",
-            new Vector2(0, 280), new Vector2(800, 140), ACCENT_PINK);
-        var matchesBtn = CreateButton(homePanel.transform, "GoToMatchesBtn", "💬  MATCHES",
-            new Vector2(0, 100), new Vector2(800, 140), ACCENT_PURPLE);
-        var logoutBtn = CreateButton(homePanel.transform, "LogoutBtn", "Logout",
-            new Vector2(0, -650), new Vector2(300, 80), HexColor("#555555"));
+        var userLabel = CreateText(homePanel.transform, "UserLabel", "hey you!", 56,
+            new Vector2(0, 380), 900, 100, TEXT_LIGHT, FontStyles.Bold);
 
-        // --- SWIPE ---
-        var cardBox = CreatePanel(swipePanel.transform, "Card", PANEL);
-        var cardRT = cardBox.GetComponent<RectTransform>();
+        // Stats row
+        var statsBg = CreateImage(homePanel.transform, "StatsCard", spriteCard);
+        var sRT = statsBg.rectTransform;
+        sRT.anchorMin = sRT.anchorMax = new Vector2(0.5f, 0.5f);
+        sRT.pivot = new Vector2(0.5f, 0.5f);
+        sRT.sizeDelta = new Vector2(900, 180);
+        sRT.anchoredPosition = new Vector2(0, 250);
+        statsBg.type = Image.Type.Sliced;
+
+        var coinsLabel = CreateText(statsBg.transform, "CoinsLabel", "● 0", 42,
+            new Vector2(-220, 0), 420, 80, HexColor("#ffd966"), FontStyles.Bold);
+        var gemsLabel = CreateText(statsBg.transform, "GemsLabel", "♥ 0", 42,
+            new Vector2(220, 0), 420, 80, HexColor("#88e5ff"), FontStyles.Bold);
+
+        var swipeBtn = CreateButton(homePanel.transform, "GoToSwipeBtn", "♥  DISCOVER",
+            new Vector2(0, 50), new Vector2(900, 160), spriteBtnPink);
+        var matchesBtn = CreateButton(homePanel.transform, "GoToMatchesBtn", "♥  MATCHES",
+            new Vector2(0, -140), new Vector2(900, 160), spriteBtnPurple);
+        var logoutBtn = CreateButton(homePanel.transform, "LogoutBtn", "logout",
+            new Vector2(0, -700), new Vector2(300, 90), spriteBtnDark);
+
+        // === SWIPE ===
+        var cardBox = CreateImage(swipePanel.transform, "Card", spriteCard);
+        var cardRT = cardBox.rectTransform;
         cardRT.anchorMin = cardRT.anchorMax = new Vector2(0.5f, 0.5f);
-        cardRT.sizeDelta = new Vector2(900, 1100);
+        cardRT.pivot = new Vector2(0.5f, 0.5f);
+        cardRT.sizeDelta = new Vector2(900, 1200);
         cardRT.anchoredPosition = new Vector2(0, 100);
 
-        var cardName = CreateText(cardBox.transform, "CardName", "Loading...", 60,
-            new Vector2(0, 450), 820, 120, TEXT_LIGHT, FontStyles.Bold);
-        var cardBio = CreateText(cardBox.transform, "CardBio", "", 38,
-            new Vector2(0, 260), 820, 200, TEXT_LIGHT, FontStyles.Normal);
-        cardBio.enableWordWrapping = true;
-        var cardInterests = CreateText(cardBox.transform, "CardInterests", "", 32,
-            new Vector2(0, 50), 820, 180, HexColor("#ff9eb8"), FontStyles.Italic);
-        cardInterests.enableWordWrapping = true;
+        // Card avatar
+        var cardAvatar = CreateImage(cardBox.transform, "CardAvatar", spriteAvatar);
+        var caRT = cardAvatar.rectTransform;
+        caRT.anchorMin = caRT.anchorMax = new Vector2(0.5f, 0.5f);
+        caRT.pivot = new Vector2(0.5f, 0.5f);
+        caRT.sizeDelta = new Vector2(400, 400);
+        caRT.anchoredPosition = new Vector2(0, 300);
 
-        var dislikeBtn = CreateButton(swipePanel.transform, "DislikeBtn", "✕",
-            new Vector2(-280, -700), new Vector2(200, 200), HexColor("#555555"));
+        var cardName = CreateText(cardBox.transform, "CardName", "Loading...", 56,
+            new Vector2(0, 50), 820, 100, TEXT_LIGHT, FontStyles.Bold);
+        var cardBio = CreateText(cardBox.transform, "CardBio", "", 34,
+            new Vector2(0, -120), 820, 200, TEXT_LIGHT, FontStyles.Normal);
+        cardBio.textWrappingMode = TextWrappingModes.Normal;
+        var cardInterests = CreateText(cardBox.transform, "CardInterests", "", 28,
+            new Vector2(0, -350), 820, 180, TEXT_ACCENT, FontStyles.Italic);
+        cardInterests.textWrappingMode = TextWrappingModes.Normal;
+
+        var dislikeBtn = CreateButton(swipePanel.transform, "DislikeBtn", "X",
+            new Vector2(-260, -730), new Vector2(200, 200), spriteBtnDark);
         var likeBtn = CreateButton(swipePanel.transform, "LikeBtn", "♥",
-            new Vector2(280, -700), new Vector2(200, 200), ACCENT_PINK);
-        var swipeStatus = CreateText(swipePanel.transform, "SwipeStatus", "", 36,
-            new Vector2(0, -520), 900, 60, TEXT_LIGHT, FontStyles.Bold);
-        var backFromSwipe = CreateButton(swipePanel.transform, "BackFromSwipe", "← Back",
-            new Vector2(-420, 880), new Vector2(200, 80), HexColor("#333344"));
+            new Vector2(260, -730), new Vector2(200, 200), spriteBtnPink);
+        // Make button label larger for emoji
+        MakeLabelLarger(likeBtn.gameObject, 90);
+        MakeLabelLarger(dislikeBtn.gameObject, 70);
 
-        // --- MATCHES ---
-        CreateText(matchesPanel.transform, "Heading", "Your Matches", 56,
-            new Vector2(0, 700), 900, 100, TEXT_LIGHT, FontStyles.Bold);
-        var matchesScroll = CreateScroll(matchesPanel.transform, new Vector2(0, -20), new Vector2(960, 1200));
-        var matchRow = CreateMatchRowPrefab();
-        var refreshBtn = CreateButton(matchesPanel.transform, "RefreshMatchesBtn", "↻ Refresh",
-            new Vector2(260, 700), new Vector2(250, 80), ACCENT_PURPLE);
-        var backFromMatches = CreateButton(matchesPanel.transform, "BackFromMatches", "← Back",
-            new Vector2(-420, 880), new Vector2(200, 80), HexColor("#333344"));
+        var swipeStatus = CreateText(swipePanel.transform, "SwipeStatus", "", 30,
+            new Vector2(0, -570), 900, 60, TEXT_LIGHT, FontStyles.Bold);
+        var backFromSwipe = CreateButton(swipePanel.transform, "BackFromSwipe", "← back",
+            new Vector2(-420, 800), new Vector2(220, 90), spriteBtnDark);
 
-        // --- CHAT ---
+        // === MATCHES ===
+        CreateText(matchesPanel.transform, "Heading", "♥ Your Matches", 56,
+            new Vector2(0, 720), 900, 100, TEXT_LIGHT, FontStyles.Bold);
+        var matchesScroll = CreateScroll(matchesPanel.transform, new Vector2(0, -40), new Vector2(960, 1300));
+        var matchRow = CreateMatchRowPrefab(spriteCard);
+        var refreshBtn = CreateButton(matchesPanel.transform, "RefreshMatchesBtn", "new",
+            new Vector2(330, 720), new Vector2(150, 100), spriteBtnPurple);
+        MakeLabelLarger(refreshBtn.gameObject, 40);
+        var backFromMatches = CreateButton(matchesPanel.transform, "BackFromMatches", "← back",
+            new Vector2(-420, 800), new Vector2(220, 90), spriteBtnDark);
+
+        // === CHAT ===
         var chatPartner = CreateText(chatPanel.transform, "ChatPartnerName", "Chat", 50,
-            new Vector2(0, 800), 900, 100, TEXT_LIGHT, FontStyles.Bold);
-        var chatScroll = CreateScroll(chatPanel.transform, new Vector2(0, 0), new Vector2(960, 1300));
-        var chatBubble = CreateChatBubblePrefab();
-        var chatInput = CreateInput(chatPanel.transform, "ChatInput", "Type a message...",
-            new Vector2(-140, -780), new Vector2(700, 100));
-        var sendChatBtn = CreateButton(chatPanel.transform, "SendChatBtn", "Send",
-            new Vector2(360, -780), new Vector2(200, 100), ACCENT_PINK);
-        var backFromChat = CreateButton(chatPanel.transform, "BackFromChat", "← Back",
-            new Vector2(-420, 880), new Vector2(200, 80), HexColor("#333344"));
+            new Vector2(0, 720), 900, 100, TEXT_LIGHT, FontStyles.Bold);
+        var chatScroll = CreateScroll(chatPanel.transform, new Vector2(0, -30), new Vector2(1000, 1280));
+        var chatBubble = CreateChatBubblePrefab(spriteBubbleMine);
+        var chatInput = CreateInput(chatPanel.transform, "ChatInput", "type something cute...",
+            new Vector2(-140, -810), new Vector2(760, 110), spriteInput);
+        var sendChatBtn = CreateButton(chatPanel.transform, "SendChatBtn", "SEND",
+            new Vector2(380, -810), new Vector2(200, 110), spriteBtnPink);
+        MakeLabelLarger(sendChatBtn.gameObject, 40);
+        var backFromChat = CreateButton(chatPanel.transform, "BackFromChat", "← back",
+            new Vector2(-420, 800), new Vector2(220, 90), spriteBtnDark);
 
-        // UIController wire-up
+        // UIController
         var ui = systems.AddComponent<UIController>();
         ui.loginPanel = loginPanel; ui.homePanel = homePanel;
         ui.swipePanel = swipePanel; ui.matchesPanel = matchesPanel; ui.chatPanel = chatPanel;
@@ -182,38 +240,47 @@ public static class SceneSetup
         ui.chatMessagesContent = chatScroll.content; ui.chatMessagePrefab = chatBubble;
         ui.chatInput = chatInput; ui.sendChatBtn = sendChatBtn; ui.backFromChat = backFromChat;
 
-        Camera.main.backgroundColor = BG;
+        Camera.main.backgroundColor = HexColor("#1a0e2e");
         Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
-        if (!AssetDatabase.IsValidFolder("Assets/Scenes")) AssetDatabase.CreateFolder("Assets", "Scenes");
-        if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
         EditorSceneManager.SaveScene(scene, SCENE_PATH);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(SCENE_PATH, true) };
-        Debug.Log("[SceneSetup] LOVELOOP Main.unity created");
+        Debug.Log("[SceneSetup] LOVELOOP Gen Z UI ready");
     }
 
     // ---- helpers ----
     static Color HexColor(string hex) { ColorUtility.TryParseHtmlString(hex, out var c); return c; }
-
-    static RectTransform CreateRect(Transform parent, string name)
+    static Sprite LoadSprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Sprites/{name}.png");
+    static TMP_FontAsset DefaultFont()
     {
-        var go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(parent, false);
-        return go.GetComponent<RectTransform>();
+        var f = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
+        if (f == null) f = TMP_Settings.defaultFontAsset;
+        return f;
     }
 
-    static GameObject CreatePanel(Transform parent, string name, Color? fill = null)
+    static void FullScreen(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+    }
+
+    static Image CreateImage(Transform parent, string name, Sprite sprite)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var img = go.GetComponent<Image>();
+        if (sprite != null) img.sprite = sprite;
+        else img.color = new Color(1, 1, 1, 0.1f);
+        return img;
+    }
+
+    static GameObject CreatePanel(Transform parent, string name)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup));
         go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
-        if (fill.HasValue)
-        {
-            var img = go.AddComponent<Image>();
-            img.color = fill.Value;
-        }
         return go;
     }
 
@@ -228,13 +295,15 @@ public static class SceneSetup
         rt.sizeDelta = new Vector2(w, h);
         rt.anchoredPosition = pos;
         var t = go.AddComponent<TextMeshProUGUI>();
+        var font = DefaultFont();
+        if (font != null) t.font = font;
         t.text = text; t.fontSize = fontSize; t.color = color;
         t.fontStyle = style; t.alignment = TextAlignmentOptions.Center;
         t.richText = true;
         return t;
     }
 
-    static Button CreateButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, Color fill)
+    static Button CreateButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, Sprite sprite)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
@@ -243,20 +312,29 @@ public static class SceneSetup
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size;
         rt.anchoredPosition = pos;
-        go.GetComponent<Image>().color = fill;
+        var img = go.GetComponent<Image>();
+        if (sprite != null) img.sprite = sprite;
+        else img.color = new Color(1, 0.3f, 0.55f, 1);
 
         var labelGO = new GameObject("Label", typeof(RectTransform));
         labelGO.transform.SetParent(go.transform, false);
         var lrt = labelGO.GetComponent<RectTransform>();
-        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
-        lrt.sizeDelta = Vector2.zero;
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one; lrt.sizeDelta = Vector2.zero;
         var t = labelGO.AddComponent<TextMeshProUGUI>();
-        t.text = label; t.fontSize = 44; t.alignment = TextAlignmentOptions.Center;
+        var font = DefaultFont();
+        if (font != null) t.font = font;
+        t.text = label; t.fontSize = 46; t.alignment = TextAlignmentOptions.Center;
         t.color = Color.white; t.fontStyle = FontStyles.Bold;
         return go.GetComponent<Button>();
     }
 
-    static TMP_InputField CreateInput(Transform parent, string name, string placeholder, Vector2 pos, Vector2 size)
+    static void MakeLabelLarger(GameObject btn, int size)
+    {
+        var t = btn.GetComponentInChildren<TextMeshProUGUI>();
+        if (t) t.fontSize = size;
+    }
+
+    static TMP_InputField CreateInput(Transform parent, string name, string placeholder, Vector2 pos, Vector2 size, Sprite sprite)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(parent, false);
@@ -264,7 +342,9 @@ public static class SceneSetup
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size; rt.anchoredPosition = pos;
-        go.GetComponent<Image>().color = new Color(1, 1, 1, 0.1f);
+        var bgImg = go.GetComponent<Image>();
+        if (sprite != null) bgImg.sprite = sprite;
+        else bgImg.color = new Color(1, 1, 1, 0.1f);
 
         var inp = go.AddComponent<TMP_InputField>();
 
@@ -272,14 +352,16 @@ public static class SceneSetup
         textArea.transform.SetParent(go.transform, false);
         var taRT = textArea.GetComponent<RectTransform>();
         taRT.anchorMin = Vector2.zero; taRT.anchorMax = Vector2.one;
-        taRT.offsetMin = new Vector2(20, 8); taRT.offsetMax = new Vector2(-20, -8);
+        taRT.offsetMin = new Vector2(40, 10); taRT.offsetMax = new Vector2(-40, -10);
 
         var textGO = new GameObject("Text", typeof(RectTransform));
         textGO.transform.SetParent(textArea.transform, false);
         var trt = textGO.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one; trt.offsetMin = trt.offsetMax = Vector2.zero;
         var textComp = textGO.AddComponent<TextMeshProUGUI>();
-        textComp.fontSize = 44; textComp.color = TEXT_LIGHT;
+        var inputFont = DefaultFont();
+        if (inputFont != null) textComp.font = inputFont;
+        textComp.fontSize = 42; textComp.color = Color.white;
         textComp.alignment = TextAlignmentOptions.MidlineLeft;
 
         var placeholderGO = new GameObject("Placeholder", typeof(RectTransform));
@@ -287,8 +369,9 @@ public static class SceneSetup
         var prt = placeholderGO.GetComponent<RectTransform>();
         prt.anchorMin = Vector2.zero; prt.anchorMax = Vector2.one; prt.offsetMin = prt.offsetMax = Vector2.zero;
         var placeComp = placeholderGO.AddComponent<TextMeshProUGUI>();
-        placeComp.text = placeholder; placeComp.fontSize = 44;
-        placeComp.color = TEXT_MUTED; placeComp.fontStyle = FontStyles.Italic;
+        if (inputFont != null) placeComp.font = inputFont;
+        placeComp.text = placeholder; placeComp.fontSize = 42;
+        placeComp.color = HexColor("#c0b0e0"); placeComp.fontStyle = FontStyles.Italic;
         placeComp.alignment = TextAlignmentOptions.MidlineLeft;
 
         inp.textComponent = textComp;
@@ -306,14 +389,14 @@ public static class SceneSetup
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size; rt.anchoredPosition = pos;
-        go.GetComponent<Image>().color = new Color(0, 0, 0, 0.25f);
+        go.GetComponent<Image>().color = new Color(0, 0, 0, 0.2f);
 
         var content = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         content.transform.SetParent(go.transform, false);
         var crt = content.GetComponent<RectTransform>();
         crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1); crt.pivot = new Vector2(0.5f, 1);
         var vlg = content.GetComponent<VerticalLayoutGroup>();
-        vlg.padding = new RectOffset(10, 10, 10, 10); vlg.spacing = 6;
+        vlg.padding = new RectOffset(15, 15, 15, 15); vlg.spacing = 12;
         vlg.childControlWidth = true; vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
         content.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -322,31 +405,50 @@ public static class SceneSetup
         return new ScrollCreation { scroll = sr, content = crt };
     }
 
-    static GameObject CreateMatchRowPrefab()
+    static GameObject CreateMatchRowPrefab(Sprite cardSprite)
     {
         const string path = "Assets/Prefabs/MatchRow.prefab";
         var go = new GameObject("MatchRow", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
-        go.GetComponent<LayoutElement>().preferredHeight = 100;
-        go.GetComponent<Image>().color = PANEL;
+        go.GetComponent<LayoutElement>().preferredHeight = 130;
+        var img = go.GetComponent<Image>();
+        if (cardSprite != null) img.sprite = cardSprite;
+        else img.color = new Color(1, 1, 1, 0.15f);
         var labelGO = new GameObject("Label", typeof(RectTransform));
         labelGO.transform.SetParent(go.transform, false);
         var lrt = labelGO.GetComponent<RectTransform>();
-        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one; lrt.offsetMin = new Vector2(20, 0); lrt.offsetMax = new Vector2(-20, 0);
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = new Vector2(30, 0); lrt.offsetMax = new Vector2(-30, 0);
         var t = labelGO.AddComponent<TextMeshProUGUI>();
-        t.text = "..."; t.fontSize = 40; t.color = TEXT_LIGHT; t.alignment = TextAlignmentOptions.MidlineLeft;
+        var mrFont = DefaultFont();
+        if (mrFont != null) t.font = mrFont;
+        t.text = "..."; t.fontSize = 40; t.color = Color.white;
+        t.alignment = TextAlignmentOptions.MidlineLeft;
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return AssetDatabase.LoadAssetAtPath<GameObject>(path);
     }
 
-    static GameObject CreateChatBubblePrefab()
+    static GameObject CreateChatBubblePrefab(Sprite bubbleSprite)
     {
         const string path = "Assets/Prefabs/ChatBubble.prefab";
-        var go = new GameObject("ChatBubble", typeof(RectTransform), typeof(LayoutElement));
-        go.GetComponent<LayoutElement>().preferredHeight = 60;
-        var t = go.AddComponent<TextMeshProUGUI>();
-        t.text = "..."; t.fontSize = 32; t.color = TEXT_LIGHT;
-        t.enableWordWrapping = true; t.alignment = TextAlignmentOptions.Left;
+        var go = new GameObject("ChatBubble", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        go.GetComponent<LayoutElement>().preferredHeight = 80;
+        var img = go.GetComponent<Image>();
+        if (bubbleSprite != null) img.sprite = bubbleSprite;
+        else img.color = new Color(1, 0.3f, 0.55f, 1);
+
+        var labelGO = new GameObject("Label", typeof(RectTransform));
+        labelGO.transform.SetParent(go.transform, false);
+        var lrt = labelGO.GetComponent<RectTransform>();
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = new Vector2(25, 10); lrt.offsetMax = new Vector2(-25, -10);
+        var t = labelGO.AddComponent<TextMeshProUGUI>();
+        var cbFont = DefaultFont();
+        if (cbFont != null) t.font = cbFont;
+        t.text = "..."; t.fontSize = 32; t.color = Color.white;
+        t.textWrappingMode = TextWrappingModes.Normal;
+        t.alignment = TextAlignmentOptions.MidlineLeft;
+
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         return AssetDatabase.LoadAssetAtPath<GameObject>(path);

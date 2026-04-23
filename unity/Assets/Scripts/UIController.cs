@@ -138,8 +138,8 @@ namespace LoveLoop
             if (u != null)
             {
                 if (userLabel) userLabel.text = $"Hi, {u.display_name ?? u.username}!  Lv.{u.level}";
-                if (coinsLabel) coinsLabel.text = $"💰 {u.coins_balance}";
-                if (gemsLabel) gemsLabel.text = $"💎 {u.gems_balance}";
+                if (coinsLabel) coinsLabel.text = $"● {u.coins_balance}";
+                if (gemsLabel) gemsLabel.text = $"♥ {u.gems_balance}";
             }
             SetPanel(homePanel);
         }
@@ -187,7 +187,7 @@ namespace LoveLoop
             {
                 if (ok && resp != null && resp.matched)
                 {
-                    if (swipeStatus) swipeStatus.text = $"💕 MATCH with {targetName}!";
+                    if (swipeStatus) swipeStatus.text = $"♥ MATCH with {targetName}!";
                 }
                 cardIndex++;
                 ShowCurrentCard();
@@ -207,7 +207,7 @@ namespace LoveLoop
                     if (!matchRowPrefab) continue;
                     var row = Instantiate(matchRowPrefab, matchListContent);
                     var label = row.GetComponentInChildren<TextMeshProUGUI>();
-                    if (label) label.text = $"💕 {m.other_display_name ?? m.other_username} (Lv{m.relationship_level})";
+                    if (label) label.text = $"♥ {m.other_display_name ?? m.other_username} (Lv{m.relationship_level})";
                     var btn = row.GetComponentInChildren<Button>();
                     if (btn)
                     {

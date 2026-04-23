@@ -6,12 +6,23 @@ public static class BuildScript
 {
     public static void BuildWindows()
     {
+        if (!System.IO.File.Exists("Assets/Scenes/Main.unity"))
+        {
+            SceneSetup.CreateMainScene();
+            AssetDatabase.Refresh();
+        }
         var scenes = new System.Collections.Generic.List<string>();
         foreach (var s in EditorBuildSettings.scenes) if (s.enabled) scenes.Add(s.path);
+        if (scenes.Count == 0) scenes.Add("Assets/Scenes/Main.unity");
         System.IO.Directory.CreateDirectory("../builds/Windows");
         PlayerSettings.productName = "LoveLoop";
         PlayerSettings.companyName = "yami";
         PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Standalone, "com.yami.loveloop");
+        PlayerSettings.defaultScreenWidth = 540;
+        PlayerSettings.defaultScreenHeight = 960;
+        PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+        PlayerSettings.resizableWindow = true;
+        PlayerSettings.defaultIsNativeResolution = false;
 
         var opts = new BuildPlayerOptions {
             scenes = scenes.ToArray(),
