@@ -8,11 +8,11 @@ import { api, hasToken, mediaUrl, type Match } from "@/lib/api";
 import { BottomNav } from "@/components/BottomNav";
 
 const GAMES = [
-  { type: "quiz", name: "Vibe Check", blurb: "10 Qs, who knows who better", icon: HelpCircle, color: "from-pink-400 to-rose-500", unlocked: true },
-  { type: "rhythm", name: "Beat Sync", blurb: "tap to the song, stay in sync", icon: Music2, color: "from-purple-400 to-fuchsia-600", unlocked: false },
-  { type: "word", name: "Word Spark", blurb: "speed word association", icon: Zap, color: "from-cyan-400 to-blue-500", unlocked: false },
-  { type: "trivia", name: "Trivia Clash", blurb: "10 questions, first right wins", icon: HelpCircle, color: "from-amber-400 to-orange-500", unlocked: false },
-  { type: "drawing", name: "Sketch & Guess", blurb: "draw, they guess, laugh together", icon: Pencil, color: "from-emerald-400 to-teal-500", unlocked: false },
+  { type: "quiz",    name: "Vibe Check",    blurb: "10 Qs, who knows who better",    icon: HelpCircle, color: "from-pink-400 to-rose-500",     unlocked: true },
+  { type: "trivia",  name: "Trivia Clash",  blurb: "general knowledge, fastest wins", icon: HelpCircle, color: "from-amber-400 to-orange-500", unlocked: true },
+  { type: "word",    name: "Word Spark",    blurb: "speed word association",         icon: Zap,        color: "from-cyan-400 to-blue-500",    unlocked: true },
+  { type: "rhythm",  name: "Beat Sync",     blurb: "tap to the song, stay in sync",  icon: Music2,     color: "from-purple-400 to-fuchsia-600", unlocked: false },
+  { type: "drawing", name: "Sketch & Guess", blurb: "draw, they guess, laugh together", icon: Pencil,  color: "from-emerald-400 to-teal-500",  unlocked: false },
 ];
 
 export default function PlayPage() {

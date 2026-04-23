@@ -15,9 +15,19 @@ type Props = {
   onEnd: () => void;
 };
 
+// ICE servers: STUN for direct P2P, TURN relay for strict NATs (~15% of networks need this).
+// Defaults: Google STUN (free, global) + Metered.ca free TURN (limited bandwidth but works for demos).
+// For production, set NEXT_PUBLIC_TURN_URL/USERNAME/CREDENTIAL to your own Twilio/Xirsys/coturn.
+const TURN_URL = process.env.NEXT_PUBLIC_TURN_URL || "turn:global.relay.metered.ca:80";
+const TURN_USERNAME = process.env.NEXT_PUBLIC_TURN_USERNAME || "ef82f36dfef55f9df4c3d69e";
+const TURN_CREDENTIAL = process.env.NEXT_PUBLIC_TURN_CREDENTIAL || "VqPvYfZoFpWIhgGh";
+
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
+  { urls: TURN_URL, username: TURN_USERNAME, credential: TURN_CREDENTIAL },
+  { urls: TURN_URL.replace(":80", ":443"), username: TURN_USERNAME, credential: TURN_CREDENTIAL },
+  { urls: TURN_URL.replace("turn:", "turns:").replace(":80", ":443"), username: TURN_USERNAME, credential: TURN_CREDENTIAL },
 ];
 
 export function VideoCall({ role, peerId, peerName, peerAvatar, onEnd }: Props) {

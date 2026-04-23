@@ -34,7 +34,23 @@ On push to `main` Railway auto-deploys. Migrations run automatically on boot (`s
 4. Deploy. Vercel gives you `loveloop.vercel.app` (or custom domain).
 5. Add the Vercel URL to backend `CORS_ORIGIN`.
 
-## 3. Cloudinary (persistent media storage)
+## 3. TURN server (video call reliability)
+
+WebRTC peer-to-peer works for ~85% of networks. The rest sit behind strict/symmetric NAT and need a TURN relay. Defaults bundled with the app use the free [Metered.ca](https://metered.ca) TURN (limited bandwidth). To upgrade for production, set in your Vercel web env:
+
+```
+NEXT_PUBLIC_TURN_URL=turn:your.turn.host:3478
+NEXT_PUBLIC_TURN_USERNAME=...
+NEXT_PUBLIC_TURN_CREDENTIAL=...
+```
+
+Providers:
+- **Twilio** — $0.40/GB, reliable, global edge ([docs](https://www.twilio.com/stun-turn))
+- **Xirsys** — $33/mo for 25GB
+- **self-host coturn** — free, needs a $5/mo VM
+- **Metered.ca** — free tier (default), 500MB/month
+
+## 4. Cloudinary (persistent media storage)
 
 Without Cloudinary, uploaded photos/videos live on Railway's ephemeral disk and vanish on redeploy.
 
