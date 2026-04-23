@@ -199,6 +199,35 @@ export const api = {
     req<{ status: "accepted" | "declined" }>("POST", `/groups/friends/respond/${userId}`, { action }),
   searchFriends: (q: string) =>
     req<{ users: Friend[] }>("GET", `/groups/friends/search?q=${encodeURIComponent(q)}`),
+
+  // music
+  musicCategories: () => req<{ categories: { category: string; track_count: number }[] }>("GET", "/music/categories"),
+  musicList: (params: { category?: string; q?: string; trending?: boolean; favorite?: boolean; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set("category", params.category);
+    if (params.q) qs.set("q", params.q);
+    if (params.trending) qs.set("trending", "1");
+    if (params.favorite) qs.set("favorite", "1");
+    if (params.limit) qs.set("limit", String(params.limit));
+    return req<{ tracks: MusicTrack[] }>("GET", `/music?${qs.toString()}`);
+  },
+  useMusic: (trackId: string) => req<{ use_count: number }>("POST", `/music/${trackId}/use`),
+  favoriteMusic: (trackId: string) => req<{ favorited: boolean }>("POST", `/music/${trackId}/favorite`),
+};
+
+export type MusicTrack = {
+  id: string;
+  title: string;
+  artist: string;
+  category: string;
+  mood: string | null;
+  duration_seconds: number;
+  url: string;
+  cover_gradient: string;
+  use_count: number;
+  is_trending: boolean;
+  tags: string[];
+  favorited_by_me?: boolean;
 };
 
 export type GroupChat = {

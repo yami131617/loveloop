@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 export function SettingsChrome({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="relative min-h-screen pb-20 max-w-md mx-auto px-6 pt-10">
+    <div className="relative min-h-screen pb-20 max-w-md mx-auto lg:max-w-2xl px-6 pt-10">
       <header className="flex items-center gap-3 mb-6">
         <Link href="/settings" className="glass w-10 h-10 rounded-full flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />

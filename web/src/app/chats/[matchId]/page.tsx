@@ -95,7 +95,7 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto">
+    <div className="flex flex-col h-screen max-w-md mx-auto lg:max-w-3xl">
       <header className="flex items-center gap-3 px-4 py-3 backdrop-blur-lg bg-black/30 border-b border-white/10">
         <Link href="/chats" className="glass w-10 h-10 rounded-full flex items-center justify-center">
           <ArrowLeft className="w-4 h-4" />

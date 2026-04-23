@@ -140,7 +140,7 @@ export default function RoomDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto">
+    <div className="flex flex-col h-screen max-w-md mx-auto lg:max-w-3xl">
       <header className={`relative px-4 py-4 bg-gradient-to-br ${room.cover_gradient}`}>
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative flex items-center gap-3">

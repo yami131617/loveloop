@@ -18,6 +18,7 @@ const postsRoutes = require('./routes/posts');
 const roomsRoutes = require('./routes/rooms');
 const preferencesRoutes = require('./routes/preferences');
 const groupsRoutes = require('./routes/groups');
+const musicRoutes = require('./routes/music');
 const errorHandler = require('./middleware/errorHandler');
 const { runMigrations } = require('./scripts/migrate');
 const { setupSocket } = require('./socket');
@@ -87,6 +88,7 @@ app.use('/posts', postsRoutes);
 app.use('/rooms', roomsRoutes);
 app.use('/preferences', preferencesRoutes);
 app.use('/groups', groupsRoutes);
+app.use('/music', musicRoutes);
 
 // Serve uploaded media when Cloudinary not configured (local disk fallback)
 const path = require('path');

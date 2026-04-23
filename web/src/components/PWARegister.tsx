@@ -22,7 +22,28 @@ export function PWARegister() {
           regs.forEach((r) => r.unregister());
         }).catch(() => {});
       } else {
-        navigator.serviceWorker.register("/sw.js").catch((e) => {
+        navigator.serviceWorker.register("/sw.js").then((reg) => {
+          // Auto-reload the page the first time a brand-new SW takes over, so
+          // users get the new deployment on plain F5 instead of having to Ctrl+F5.
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (refreshing) return;
+            refreshing = true;
+            location.reload();
+          });
+          // Poll for updates every 60 seconds while the tab is open
+          setInterval(() => reg.update().catch(() => {}), 60_000);
+          reg.addEventListener("updatefound", () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener("statechange", () => {
+              if (nw.state === "installed" && navigator.serviceWorker.controller) {
+                // New version waiting — activate it now
+                nw.postMessage({ type: "SKIP_WAITING" });
+              }
+            });
+          });
+        }).catch((e) => {
           console.warn("[pwa] sw register failed", e);
         });
       }

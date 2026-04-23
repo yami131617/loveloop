@@ -41,7 +41,7 @@ export default function RoomsPage() {
   );
 
   return (
-    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto lg:max-w-5xl">
       <div className="mb-5">
         <div className="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-bold">Public</div>
         <h1 className="text-3xl font-black">
@@ -68,7 +68,7 @@ export default function RoomsPage() {
           <p className="text-sm text-white/60">no rooms match that search</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
           {filtered.map((r, i) => (
             <motion.div
               key={r.id}

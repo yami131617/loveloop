@@ -23,8 +23,9 @@ export default function FeedPage() {
   }, [router]);
 
   return (
-    <div className="relative min-h-screen pb-28">
-      <header className="sticky top-0 z-30 backdrop-blur-lg bg-black/20 px-6 py-4 flex justify-between items-center max-w-md mx-auto">
+    <div className="relative min-h-screen pb-28 lg:pb-10">
+      {/* MOBILE header (sticky pink bar). Hidden on desktop because sidebar covers branding. */}
+      <header className="lg:hidden sticky top-0 z-30 backdrop-blur-lg bg-black/20 px-6 py-4 flex justify-between items-center max-w-md mx-auto">
         <h1 className="text-2xl font-black bg-gradient-to-r from-pink-300 via-fuchsia-300 to-purple-300 text-transparent bg-clip-text">
           LoveLoop
         </h1>
@@ -33,17 +34,76 @@ export default function FeedPage() {
         </Link>
       </header>
 
-      <div className="max-w-md mx-auto px-4 flex flex-col gap-5 mt-3">
-        {loading ? (
-          <div className="text-center text-white/50 py-12">loading vibes…</div>
-        ) : posts.length === 0 ? (
-          <EmptyFeed />
-        ) : (
-          posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} meId={meId} />)
-        )}
+      {/* DESKTOP: center column + right aside, proper web feed layout */}
+      <div className="lg:max-w-6xl lg:mx-auto lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8 lg:px-8 lg:pt-8">
+        {/* Feed column */}
+        <div className="max-w-md lg:max-w-xl mx-auto w-full px-4 lg:px-0 flex flex-col gap-5 mt-3 lg:mt-0">
+          <div className="hidden lg:flex items-center justify-between mb-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-bold mb-1">For you</div>
+              <h1 className="text-3xl font-black">Feed</h1>
+            </div>
+            <Link href="/discover" className="btn-gradient-pink px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg hover:scale-[1.03] active:scale-[0.97] transition">
+              <Compass className="w-4 h-4" />
+              Swipe
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="text-center text-white/50 py-12">loading vibes…</div>
+          ) : posts.length === 0 ? (
+            <EmptyFeed />
+          ) : (
+            posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} meId={meId} />)
+          )}
+        </div>
+
+        {/* Desktop right rail: only visible lg+ */}
+        <aside className="hidden lg:block sticky top-8 self-start h-fit flex-col gap-4">
+          <TrendingPanel />
+          <TipPanel />
+        </aside>
       </div>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function TrendingPanel() {
+  return (
+    <div className="glass rounded-3xl p-5 mb-4">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-bold mb-3 flex items-center gap-1.5">
+        <Sparkles className="w-3 h-3" /> Trending rooms
+      </div>
+      <div className="flex flex-col gap-2">
+        {[
+          { slug: "late-night-vibes", emoji: "🌙", name: "Late Night Vibes" },
+          { slug: "music-heads", emoji: "🎧", name: "Music Heads" },
+          { slug: "gamer-club", emoji: "🎮", name: "Gamer Club" },
+          { slug: "foodie-corner", emoji: "🍜", name: "Foodie Corner" },
+        ].map((r) => (
+          <Link key={r.slug} href={`/rooms/${r.slug}`} className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/5 transition">
+            <div className="text-2xl">{r.emoji}</div>
+            <div className="text-sm font-semibold flex-1">{r.name}</div>
+            <span className="text-[10px] text-white/40">→</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TipPanel() {
+  return (
+    <div className="glass rounded-3xl p-5">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-cyan-300 font-bold mb-2 flex items-center gap-1.5">💡 Pro tip</div>
+      <p className="text-sm text-white/80 leading-relaxed mb-3">
+        Match with someone? Invite them to a vibe check quiz — fastest way to unlock level 2 ♥.
+      </p>
+      <Link href="/play" className="text-xs font-bold text-pink-300 hover:text-pink-200">
+        Browse mini-games →
+      </Link>
     </div>
   );
 }

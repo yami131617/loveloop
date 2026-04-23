@@ -64,7 +64,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-32 px-6 pt-8 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-32 px-6 pt-8 max-w-md mx-auto lg:max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-black">
           Share a <span className="bg-gradient-to-r from-pink-400 to-purple-400 text-transparent bg-clip-text">vibe</span>

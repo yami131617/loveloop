@@ -30,7 +30,7 @@ export default function ChatsPage() {
   }, [router]);
 
   return (
-    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto lg:max-w-3xl">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-black">
           Your <span className="bg-gradient-to-r from-pink-400 to-purple-400 text-transparent bg-clip-text">loops</span> 💕

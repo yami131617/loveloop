@@ -39,37 +39,29 @@ body {
   min-height: 100vh;
 }
 
-/* Desktop: render the app inside a phone-frame so it doesn't look like a lost column */
-@media (min-width: 768px) {
+/* Desktop: clean uniform dark background. One color, no gradients, no sparkles —
+   so the sidebar, content, and empty space all blend as a single surface. */
+@media (min-width: 1024px) {
   body {
-    background:
-      radial-gradient(80% 60% at 50% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 70%),
-      linear-gradient(180deg, #0d0717 0%, #1a0e2e 50%, #0a0518 100%);
+    background: #120821;
   }
-  .app-content {
-    width: 430px;
-    max-width: calc(100vw - 32px);
-    margin: 24px auto;
-    min-height: calc(100vh - 48px) !important;
-    border-radius: 48px;
-    overflow: hidden;
-    position: relative;
-    box-shadow:
-      0 30px 80px -20px rgba(0, 0, 0, 0.6),
-      0 0 0 8px #1a0e2e,
-      0 0 0 10px rgba(255, 255, 255, 0.06),
-      0 0 120px -20px rgba(236, 72, 153, 0.3);
-    background:
-      radial-gradient(80% 60% at 20% 10%, rgba(255, 138, 195, 0.35) 0%, transparent 60%),
-      radial-gradient(70% 60% at 90% 30%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
-      radial-gradient(90% 70% at 50% 90%, rgba(80, 56, 143, 0.45) 0%, transparent 70%),
-      linear-gradient(180deg, var(--bg-from) 0%, var(--bg-via) 40%, var(--bg-to) 100%);
+  body::before {
+    /* Kill the sparkle drift layer on desktop — was adding a patchy feel */
+    display: none;
   }
-  /* Bottom nav stays pinned to the phone-frame bottom, not viewport bottom */
-  .app-content nav.fixed {
-    position: absolute;
+  /* Hide the mobile bottom nav on desktop — sidebar replaces it */
+  nav[data-mobile-nav] {
+    display: none !important;
+  }
+  /* Match the sidebar's tint so it blends into the single-color background */
+  aside[data-sidebar], aside.fixed {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
+
+/* (removed broken .hide-desktop / .hide-mobile classes — use tailwind hidden lg:* instead) */
 
 /* Sparkle layer */
 body::before {

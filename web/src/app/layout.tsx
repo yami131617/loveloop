@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CallProvider } from "@/components/CallProvider";
 import { PWARegister } from "@/components/PWARegister";
+import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -38,7 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={inter.className}>
       <body className="antialiased">
         <CallProvider>
-          <main className="app-content min-h-screen">{children}</main>
+          <main className="app-content min-h-screen">
+            <AppShell>{children}</AppShell>
+          </main>
           <PWARegister />
         </CallProvider>
       </body>

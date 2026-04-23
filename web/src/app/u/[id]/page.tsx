@@ -62,7 +62,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-20 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-20 max-w-md mx-auto lg:max-w-4xl">
       <div className="relative h-44 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-fuchsia-500 to-purple-600" />
         <button

@@ -30,7 +30,7 @@ export default function PlayPage() {
   }, [router]);
 
   return (
-    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-28 px-6 pt-8 max-w-md mx-auto lg:max-w-3xl">
       <div className="mb-6">
         <div className="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-bold">Play together</div>
         <h1 className="text-3xl font-black">

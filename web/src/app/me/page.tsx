@@ -34,7 +34,7 @@ export default function MePage() {
   }
 
   return (
-    <div className="relative min-h-screen pb-28 max-w-md mx-auto">
+    <div className="relative min-h-screen pb-28 max-w-md mx-auto lg:max-w-4xl">
       <div className="relative h-48 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-fuchsia-500 to-purple-600" />
         <div className="absolute top-4 right-4 flex gap-2">

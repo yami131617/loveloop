@@ -34,7 +34,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="relative min-h-screen pb-28 flex flex-col">
-      <header className="px-6 pt-8 pb-4 flex items-center justify-between max-w-md mx-auto w-full">
+      <header className="px-6 pt-8 pb-4 flex items-center justify-between max-w-md mx-auto lg:max-w-lg w-full">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-bold">Discover</div>
           <h1 className="text-3xl font-black">People near you</h1>
@@ -72,7 +72,7 @@ export default function DiscoverPage() {
       </div>
 
       {current && (
-        <div className="max-w-md mx-auto w-full px-6 pb-4 flex items-center justify-center gap-4">
+        <div className="max-w-md mx-auto lg:max-w-lg w-full px-6 pb-4 flex items-center justify-center gap-4">
           <ActionBtn onClick={() => swipe("dislike")} color="from-zinc-700 to-zinc-900" size={14}>
             <X className="w-7 h-7" />
           </ActionBtn>

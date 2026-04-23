@@ -99,7 +99,7 @@ export default function QuizPlayPage() {
   const progress = ((qIdx + (picked !== null ? 1 : 0)) / QUESTIONS.length) * 100;
 
   return (
-    <div className="relative min-h-screen flex flex-col max-w-md mx-auto">
+    <div className="relative min-h-screen flex flex-col max-w-md mx-auto lg:max-w-2xl">
       <header className="flex items-center justify-between px-5 py-4">
         <Link href="/play" className="glass w-10 h-10 rounded-full flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />

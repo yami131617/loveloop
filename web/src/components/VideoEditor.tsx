@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { X, Music2, Scissors, Check, Loader2, Sparkles } from "lucide-react";
-import { TRACKS, type Track } from "@/lib/tracks";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Music2, Scissors, Check, Loader2, Sparkles, Play } from "lucide-react";
+import { MusicPicker } from "./MusicPicker";
+import type { MusicTrack } from "@/lib/api";
+
+// Legacy Track type preserved for ffmpeg.wasm code; maps cleanly from MusicTrack.
+type Track = { id: string; name: string; url: string; color: string };
 
 type Props = {
   file: File;
@@ -42,7 +46,9 @@ export function VideoEditor({ file, onDone, onCancel }: Props) {
   const [duration, setDuration] = useState(0);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
-  const [track, setTrack] = useState<Track>(TRACKS[0]);
+  // track === null means "original audio only, no music overlay"
+  const [track, setTrack] = useState<Track | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [volume, setVolume] = useState(0.6); // music vs original audio mix
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -68,7 +74,7 @@ export function VideoEditor({ file, onDone, onCancel }: Props) {
 
   // Live preview: overlay audio in sync
   useEffect(() => {
-    if (track.url && audioRef.current) {
+    if (track?.url && audioRef.current) {
       audioRef.current.src = track.url;
       audioRef.current.volume = volume;
       audioRef.current.load();
@@ -102,7 +108,7 @@ export function VideoEditor({ file, onDone, onCancel }: Props) {
       const start = trimStart.toFixed(3);
       const dur = (trimEnd - trimStart).toFixed(3);
 
-      if (track.url) {
+      if (track?.url) {
         // Fetch music (streaming mp3)
         const r = await fetch(track.url);
         if (!r.ok) throw new Error("music fetch failed");
@@ -169,85 +175,120 @@ export function VideoEditor({ file, onDone, onCancel }: Props) {
         </button>
       </header>
 
-      <div className="relative flex-1 flex items-center justify-center bg-black">
-        <video
-          ref={videoRef}
-          src={previewUrl}
-          className="max-h-full max-w-full"
-          playsInline
-          autoPlay
-          loop
-          muted={!!track.url}  // mute original when overlay present (audio plays via <audio>)
-          onTimeUpdate={onTimeUpdate}
-          onPlay={() => { if (track.url && audioRef.current) audioRef.current.play().catch(() => {}); }}
-          onPause={() => { if (audioRef.current) audioRef.current.pause(); }}
-        />
-        <audio ref={audioRef} loop />
+      {/* On desktop: 2-column (video left, controls right). On mobile: stacked (video top, controls bottom).
+          Controls are scrollable on mobile so music picker + trim always reachable without pushing off-screen. */}
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row bg-black overflow-hidden">
+        {/* Video preview */}
+        <div className="relative flex-1 min-h-0 flex items-center justify-center bg-black lg:border-r lg:border-white/5">
+          <video
+            ref={videoRef}
+            src={previewUrl}
+            className="max-h-full max-w-full"
+            playsInline
+            autoPlay
+            loop
+            muted={!!track?.url}
+            onTimeUpdate={onTimeUpdate}
+            onPlay={() => { if (track?.url && audioRef.current) audioRef.current.play().catch(() => {}); }}
+            onPause={() => { if (audioRef.current) audioRef.current.pause(); }}
+          />
+          <audio ref={audioRef} loop />
+        </div>
+
+        {/* Controls panel — scrollable on its own, fixed width on desktop so music picker is ALWAYS visible */}
+        <div className="lg:w-96 xl:w-[28rem] shrink-0 overflow-y-auto px-6 py-4 flex flex-col gap-5">
+          {/* Trim */}
+          <section>
+            <div className="flex items-center gap-2 mb-2 text-xs font-bold text-white/70">
+              <Scissors className="w-3.5 h-3.5" /> TRIM
+              <span className="ml-auto font-mono text-[11px] text-white/80">
+                {fmt(trimStart)} → {fmt(trimEnd)} <span className="text-white/40">({fmt(trimEnd - trimStart)})</span>
+              </span>
+            </div>
+            {duration > 0 && (
+              <DualRange
+                min={0}
+                max={duration}
+                start={trimStart}
+                end={trimEnd}
+                onChange={(s, e) => { setTrimStart(s); setTrimEnd(e); }}
+              />
+            )}
+          </section>
+
+          {/* Music picker trigger — opens TikTok-style full library picker */}
+          <section>
+            <div className="flex items-center gap-2 mb-2 text-xs font-bold text-white/70">
+              <Music2 className="w-3.5 h-3.5" /> SOUNDTRACK
+            </div>
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="w-full glass rounded-2xl p-3 flex items-center gap-3 text-left hover:bg-white/10 transition border border-white/10"
+            >
+              {track ? (
+                <>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${track.color} flex items-center justify-center shadow-lg shrink-0`}>
+                    <Music2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm truncate">{track.name}</div>
+                    <div className="text-[11px] text-white/50">tap to change · browse 28+ tracks</div>
+                  </div>
+                  <span className="text-[11px] font-bold text-pink-300">Change →</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center shadow-lg shrink-0">
+                    <Play className="w-5 h-5 fill-white translate-x-[1px]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm">Pick a sound</div>
+                    <div className="text-[11px] text-white/50">trending · categories · search</div>
+                  </div>
+                  <span className="text-[11px] font-bold text-pink-300">Browse →</span>
+                </>
+              )}
+            </button>
+
+            {track && (
+              <div className="mt-3">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1.5">
+                  music vs original
+                  <span className="ml-auto text-pink-300">{Math.round(volume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full accent-pink-400"
+                />
+              </div>
+            )}
+          </section>
+
+          {err && <p className="text-rose-400 text-xs text-center">{err}</p>}
+        </div>
       </div>
 
-      {/* Trim */}
-      <div className="px-6 py-3 bg-black">
-        <div className="flex items-center gap-2 mb-2 text-xs text-white/60">
-          <Scissors className="w-3 h-3" /> trim
-          <span className="ml-auto font-semibold text-white/80">
-            {fmt(trimStart)} → {fmt(trimEnd)} ({fmt(trimEnd - trimStart)})
-          </span>
-        </div>
-        {duration > 0 && (
-          <DualRange
-            min={0}
-            max={duration}
-            start={trimStart}
-            end={trimEnd}
-            onChange={(s, e) => { setTrimStart(s); setTrimEnd(e); }}
+      <AnimatePresence>
+        {pickerOpen && (
+          <MusicPicker
+            value={track ? ({ id: track.id } as MusicTrack) : null}
+            onClose={() => setPickerOpen(false)}
+            onPick={(mt) => {
+              if (mt) {
+                setTrack({ id: mt.id, name: mt.title, url: mt.url, color: mt.cover_gradient });
+              } else {
+                setTrack(null);
+              }
+              setPickerOpen(false);
+            }}
           />
         )}
-      </div>
-
-      {/* Music picker */}
-      <div className="px-6 pb-6 pt-2 bg-black">
-        <div className="flex items-center gap-2 mb-2 text-xs text-white/60">
-          <Music2 className="w-3 h-3" /> soundtrack
-        </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-3">
-          {TRACKS.map((t) => {
-            const active = track.id === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTrack(t)}
-                className={`shrink-0 rounded-2xl px-3 py-2 border text-left transition ${
-                  active ? "bg-white/10 border-pink-300/60" : "glass border-white/10 hover:bg-white/5"
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center mb-1`}>
-                  {active ? <Check className="w-4 h-4" /> : <Music2 className="w-4 h-4" />}
-                </div>
-                <div className="text-xs font-bold">{t.name}</div>
-                <div className="text-[10px] text-white/50">{t.mood}</div>
-              </button>
-            );
-          })}
-        </div>
-        {track.url && (
-          <div>
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">
-              music vs original
-              <span className="ml-auto">{Math.round(volume * 100)}%</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-full accent-pink-400"
-            />
-          </div>
-        )}
-        {err && <p className="text-rose-400 text-xs text-center mt-3">{err}</p>}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
