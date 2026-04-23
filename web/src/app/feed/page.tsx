@@ -11,9 +11,11 @@ export default function FeedPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [meId, setMeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
+    api.me().then((r) => setMeId(r.user.id)).catch(() => {});
     api.getFeed(20)
       .then((r) => setPosts(r.posts))
       .catch((e) => console.error(e))
@@ -37,7 +39,7 @@ export default function FeedPage() {
         ) : posts.length === 0 ? (
           <EmptyFeed />
         ) : (
-          posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} />)
+          posts.map((p, i) => <PostCard key={p.id} post={p} priority={i < 2} meId={meId} />)
         )}
       </div>
 
@@ -63,7 +65,8 @@ function EmptyFeed() {
   );
 }
 
-function PostCard({ post, priority }: { post: Post; priority?: boolean }) {
+function PostCard({ post, priority, meId }: { post: Post; priority?: boolean; meId: string | null }) {
+  const isMine = meId === post.user_id;
   const [liked, setLiked] = useState(!!post.liked_by_me);
   const [likes, setLikes] = useState(post.likes_count);
   const [muted, setMuted] = useState(true);
@@ -107,7 +110,11 @@ function PostCard({ post, priority }: { post: Post; priority?: boolean }) {
             <div className="text-[11px] text-white/50">@{post.username}</div>
           </div>
         </Link>
-        <FollowBtn userId={post.user_id} />
+        {isMine ? (
+          <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 border border-white/10 rounded-full px-2.5 py-1">You</span>
+        ) : (
+          <FollowBtn userId={post.user_id} />
+        )}
       </header>
 
       <div className="relative aspect-[4/5] bg-black/30" onDoubleClick={() => toggleLike(true)}>

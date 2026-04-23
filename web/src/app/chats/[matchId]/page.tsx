@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Image as ImageIcon, Gamepad2, Smile } from "lucide-react";
+import { ArrowLeft, Send, Image as ImageIcon, Gamepad2, Smile, Video as VideoIcon } from "lucide-react";
 import { api, hasToken, mediaUrl, type Message } from "@/lib/api";
+import { useCall } from "@/components/CallProvider";
 
 type MatchLite = { id: string; other_user_id: string; other_username: string; other_display_name: string | null; other_avatar_url: string | null; relationship_level: number };
 
@@ -19,6 +20,7 @@ export default function ChatDetailPage() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { startCall } = useCall();
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
@@ -87,9 +89,18 @@ export default function ChatDetailPage() {
             </div>
           </Link>
         )}
-        <button className="glass w-10 h-10 rounded-full flex items-center justify-center" aria-label="play game">
+        {match && (
+          <button
+            onClick={() => startCall(match.other_user_id, match.other_display_name ?? match.other_username, match.other_avatar_url, matchId)}
+            className="glass w-10 h-10 rounded-full flex items-center justify-center hover:bg-pink-500/30 transition"
+            aria-label="video call"
+          >
+            <VideoIcon className="w-4 h-4 text-pink-300" />
+          </button>
+        )}
+        <Link href={`/play/quiz/${matchId}`} className="glass w-10 h-10 rounded-full flex items-center justify-center" aria-label="play game">
           <Gamepad2 className="w-4 h-4 text-cyan-300" />
-        </button>
+        </Link>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2 no-scrollbar">

@@ -2,11 +2,12 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Camera, Video, Upload as UploadIcon, X, Sparkles, Circle } from "lucide-react";
+import { Camera, Video, Upload as UploadIcon, X, Sparkles, Circle, Wand2 } from "lucide-react";
 import { api, hasToken } from "@/lib/api";
 import { BottomNav } from "@/components/BottomNav";
 import { useEffect } from "react";
 import { VideoRecorder } from "@/components/VideoRecorder";
+import { VideoEditor } from "@/components/VideoEditor";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function UploadPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
+  const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -129,6 +131,15 @@ export default function UploadPage() {
 
           {err && <p className="text-rose-400 text-sm text-center mb-3">{err}</p>}
 
+          {kind === "video" && (
+            <button
+              onClick={() => setEditing(true)}
+              className="glass w-full py-3 rounded-full font-bold text-white border border-pink-300/40 flex items-center justify-center gap-2 mb-3 hover:bg-pink-500/10 transition"
+            >
+              <Wand2 className="w-4 h-4 text-pink-300" /> Edit video (trim + music)
+            </button>
+          )}
+
           <button
             onClick={submit}
             disabled={busy}
@@ -148,6 +159,17 @@ export default function UploadPage() {
           onRecorded={(f) => {
             setRecording(false);
             pickFile(f);
+          }}
+        />
+      )}
+
+      {editing && file && kind === "video" && (
+        <VideoEditor
+          file={file}
+          onCancel={() => setEditing(false)}
+          onDone={(edited) => {
+            setEditing(false);
+            pickFile(edited);
           }}
         />
       )}

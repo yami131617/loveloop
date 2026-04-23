@@ -3,10 +3,16 @@ const jwt = require('jsonwebtoken');
 
 function setupSocket(server) {
   const io = new Server(server, {
-    cors: { origin: (process.env.CORS_ORIGIN || '*').split(','), credentials: true }
+    cors: {
+      origin: (origin, cb) => {
+        const allowed = (process.env.CORS_ORIGIN || '*').split(',').map(s => s.trim());
+        if (allowed.includes('*') || !origin || allowed.includes(origin)) return cb(null, true);
+        cb(new Error('Not allowed by CORS: ' + origin));
+      },
+      credentials: true
+    }
   });
 
-  // Auth middleware
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token'));
@@ -24,22 +30,70 @@ function setupSocket(server) {
     console.log(`[socket] connected uid=${uid}`);
     socket.join(`user:${uid}`);
 
+    // --- Private 1-1 match chat ---
     socket.on('join_match', (matchId) => {
-      socket.join(`match:${matchId}`);
+      if (typeof matchId === 'string') socket.join(`match:${matchId}`);
     });
-
     socket.on('leave_match', (matchId) => {
-      socket.leave(`match:${matchId}`);
+      if (typeof matchId === 'string') socket.leave(`match:${matchId}`);
     });
-
-    // Typing indicator
     socket.on('typing', (matchId) => {
-      socket.to(`match:${matchId}`).emit('typing', { userId: uid, matchId });
+      if (typeof matchId === 'string') {
+        socket.to(`match:${matchId}`).emit('typing', { userId: uid, matchId });
+      }
     });
 
-    // Real-time game sync (answer submissions, score updates)
+    // --- Public rooms ---
+    socket.on('join_room', (roomId) => {
+      if (typeof roomId === 'string') socket.join(`room:${roomId}`);
+    });
+    socket.on('leave_room', (roomId) => {
+      if (typeof roomId === 'string') socket.leave(`room:${roomId}`);
+    });
+
+    // --- Game sync ---
     socket.on('game_answer', (data) => {
-      socket.to(`match:${data.matchId}`).emit('opponent_answer', { userId: uid, ...data });
+      if (data && typeof data.matchId === 'string') {
+        socket.to(`match:${data.matchId}`).emit('opponent_answer', { userId: uid, ...data });
+      }
+    });
+
+    // --- WebRTC video-call signaling (1-1 between users) ---
+    // All events are addressed to a specific `toUserId` — never broadcast.
+    // Server never touches media, only relays signaling.
+
+    socket.on('call:invite', (payload) => {
+      // payload: { toUserId, fromName, matchId }
+      if (!payload?.toUserId) return;
+      io.to(`user:${payload.toUserId}`).emit('call:incoming', {
+        fromUserId: uid,
+        fromName: payload.fromName || null,
+        matchId: payload.matchId || null,
+      });
+    });
+
+    socket.on('call:accept', ({ toUserId }) => {
+      if (toUserId) io.to(`user:${toUserId}`).emit('call:accepted', { fromUserId: uid });
+    });
+
+    socket.on('call:decline', ({ toUserId }) => {
+      if (toUserId) io.to(`user:${toUserId}`).emit('call:declined', { fromUserId: uid });
+    });
+
+    socket.on('call:offer', ({ toUserId, sdp }) => {
+      if (toUserId && sdp) io.to(`user:${toUserId}`).emit('call:offer', { fromUserId: uid, sdp });
+    });
+
+    socket.on('call:answer', ({ toUserId, sdp }) => {
+      if (toUserId && sdp) io.to(`user:${toUserId}`).emit('call:answer', { fromUserId: uid, sdp });
+    });
+
+    socket.on('call:ice', ({ toUserId, candidate }) => {
+      if (toUserId && candidate) io.to(`user:${toUserId}`).emit('call:ice', { fromUserId: uid, candidate });
+    });
+
+    socket.on('call:end', ({ toUserId }) => {
+      if (toUserId) io.to(`user:${toUserId}`).emit('call:ended', { fromUserId: uid });
     });
 
     socket.on('disconnect', () => {

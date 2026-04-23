@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { CallProvider } from "@/components/CallProvider";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.className}>
       <body className="antialiased">
-        <main className="app-content min-h-screen">{children}</main>
+        <CallProvider>
+          <main className="app-content min-h-screen">{children}</main>
+        </CallProvider>
       </body>
     </html>
   );

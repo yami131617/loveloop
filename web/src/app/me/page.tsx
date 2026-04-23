@@ -4,20 +4,24 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Settings, Share2, Grid3x3, Heart, Gamepad2, LogOut, Pencil } from "lucide-react";
-import { api, hasToken, clearAuth, type User } from "@/lib/api";
+import { api, hasToken, clearAuth, mediaUrl, type User, type Post } from "@/lib/api";
 import { BottomNav } from "@/components/BottomNav";
-
-type Post = { id: string; media_url: string; media_type: "image" | "video"; likes_count: number };
 
 export default function MePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [posts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [tab, setTab] = useState<"posts" | "liked">("posts");
 
   useEffect(() => {
     if (!hasToken()) { router.replace("/"); return; }
-    api.me().then((r) => setUser(r.user)).catch(() => router.replace("/"));
+    api.me().then(async (r) => {
+      setUser(r.user);
+      try {
+        const p = await api.getUserPosts(r.user.id);
+        setPosts(p.posts);
+      } catch {}
+    }).catch(() => router.replace("/"));
   }, [router]);
 
   function logout() {
@@ -103,14 +107,19 @@ export default function MePage() {
         ) : (
           <div className="grid grid-cols-3 gap-0.5 mt-4">
             {posts.map((p) => (
-              <div key={p.id} className="relative aspect-square overflow-hidden">
+              <Link key={p.id} href={`/p/${p.id}`} className="relative aspect-square overflow-hidden bg-black/30 group">
                 {p.media_type === "video" ? (
-                  <video src={p.media_url} muted className="w-full h-full object-cover" />
+                  <video src={mediaUrl(p.media_url)} muted playsInline className="w-full h-full object-cover" />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.media_url} alt="" className="w-full h-full object-cover" />
+                  <img src={mediaUrl(p.media_url)} alt={p.caption} className="w-full h-full object-cover" />
                 )}
-              </div>
+                {p.likes_count > 0 && (
+                  <div className="absolute bottom-1 left-1 text-[10px] font-semibold flex items-center gap-0.5 bg-black/50 backdrop-blur rounded-full px-1.5 py-0.5">
+                    <Heart className="w-2.5 h-2.5 fill-pink-400 text-pink-400" /> {p.likes_count}
+                  </div>
+                )}
+              </Link>
             ))}
           </div>
         )}

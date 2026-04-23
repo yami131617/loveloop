@@ -105,6 +105,24 @@ router.get('/feed', optionalAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /posts/:postId  — single post (must come AFTER specific routes)
+router.get('/id/:postId', optionalAuth, async (req, res, next) => {
+  try {
+    const meId = req.userId || null;
+    const r = await query(
+      `SELECT p.*, u.username, u.display_name, u.avatar_url,
+              ($1::uuid IS NOT NULL AND EXISTS (
+                SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = $1
+              )) AS liked_by_me
+       FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.id = $2`,
+      [meId, req.params.postId]
+    );
+    if (r.rowCount === 0) return res.status(404).json({ error: 'not found' });
+    res.json({ post: r.rows[0] });
+  } catch (err) { next(err); }
+});
+
 // GET /posts/user/:userId
 router.get('/user/:userId', optionalAuth, async (req, res, next) => {
   try {

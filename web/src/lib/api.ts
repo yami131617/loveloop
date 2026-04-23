@@ -148,6 +148,7 @@ export const api = {
   // posts
   getFeed: (limit = 20, offset = 0) =>
     req<{ posts: Post[] }>("GET", `/posts/feed?limit=${limit}&offset=${offset}`),
+  getPost: (postId: string) => req<{ post: Post }>("GET", `/posts/id/${postId}`),
   getUserPosts: (userId: string) =>
     req<{ posts: Post[] }>("GET", `/posts/user/${userId}`),
   likePost: (postId: string) => req<{ liked: boolean }>("POST", `/posts/${postId}/like`),
