@@ -1,62 +1,68 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, Compass, PlusSquare, MessageCircle, User, Users2 } from "lucide-react";
+import { Flame, Plus, MessageCircle, User, Users2 } from "lucide-react";
 
-const items = [
-  { href: "/feed", icon: Flame, label: "Feed" },
-  { href: "/rooms", icon: Users2, label: "Rooms" },
-  { href: "/upload", icon: PlusSquare, label: "Post", highlight: true },
-  { href: "/discover", icon: Compass, label: "Swipe" },
-  { href: "/chats", icon: MessageCircle, label: "Chat" },
+// 5 equal tabs, mobile-first. The `+` tab has a subtle gradient tint to stand out
+// without breaking the grid rhythm. Swipe lives on the Feed header, Settings under Me.
+type Tab = {
+  href: string;
+  icon: typeof Flame;
+  label: string;
+  accent?: boolean;
+  match?: string[];
+};
+
+const tabs: Tab[] = [
+  { href: "/feed",   icon: Flame,         label: "Feed"   },
+  { href: "/rooms",  icon: Users2,        label: "Rooms"  },
+  { href: "/upload", icon: Plus,          label: "Post", accent: true },
+  { href: "/chats",  icon: MessageCircle, label: "Chat"   },
+  { href: "/me",     icon: User,          label: "Me",   match: ["/me", "/settings"] },
 ];
-
-const meTab = { href: "/me", icon: User, label: "Me" };
 
 export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto px-3 pb-3 pt-2">
-        <div className="glass rounded-3xl flex justify-around items-center py-2 px-2 shadow-2xl">
-          {items.map(({ href, icon: Icon, label, highlight }) => {
-            const active = pathname === href || pathname.startsWith(href + "/");
-            if (highlight) {
+        <div className="glass rounded-3xl shadow-2xl grid grid-cols-5 items-stretch p-1.5 gap-1">
+          {tabs.map((t) => {
+            const match = t.match ?? [t.href];
+            const active = match.some((m) => pathname === m || pathname.startsWith(m + "/"));
+            if (t.accent) {
               return (
                 <Link
-                  key={href}
-                  href={href}
-                  className="relative -mt-6 btn-gradient-pink w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition"
-                  aria-label={label}
+                  key={t.href}
+                  href={t.href}
+                  aria-label={t.label}
+                  className="flex items-center justify-center"
                 >
-                  <Icon className="w-6 h-6 text-white" />
+                  <span
+                    className={`btn-gradient-pink w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg transition ${
+                      active ? "scale-105" : "hover:scale-105 active:scale-95"
+                    }`}
+                  >
+                    <t.icon className="w-6 h-6 text-white" strokeWidth={2.5} />
+                  </span>
                 </Link>
               );
             }
-            return <NavItem key={href} href={href} Icon={Icon} label={label} active={active} />;
+            return (
+              <Link
+                key={t.href}
+                href={t.href}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition ${
+                  active ? "text-pink-300" : "text-white/60 hover:text-white/90"
+                }`}
+              >
+                <t.icon className={`w-5 h-5 ${active ? "fill-pink-300/20" : ""}`} />
+                <span className="text-[10px] font-semibold">{t.label}</span>
+              </Link>
+            );
           })}
-          <NavItem
-            href={meTab.href}
-            Icon={meTab.icon}
-            label={meTab.label}
-            active={pathname === meTab.href || pathname.startsWith(meTab.href + "/") || pathname.startsWith("/settings")}
-          />
         </div>
       </div>
     </nav>
-  );
-}
-
-function NavItem({ href, Icon, label, active }: { href: string; Icon: typeof Flame; label: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl transition ${
-        active ? "text-pink-300" : "text-white/60 hover:text-white/90"
-      }`}
-    >
-      <Icon className={`w-5 h-5 ${active ? "fill-pink-300/20" : ""}`} />
-      <span className="text-[10px] font-semibold">{label}</span>
-    </Link>
   );
 }

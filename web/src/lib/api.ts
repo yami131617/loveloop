@@ -164,6 +164,103 @@ export const api = {
   postComment: (postId: string, content: string) =>
     req<{ comment: Comment }>("POST", `/posts/${postId}/comment`, { content }),
   follow: (userId: string) => req<{ following: boolean }>("POST", `/posts/follow/${userId}`),
+
+  // preferences
+  getPrefs: () => req<Prefs>("GET", "/preferences"),
+  updatePrefs: <K extends keyof Prefs>(group: K, patch: Partial<Prefs[K]>) =>
+    req<Pick<Prefs, K>>("PUT", `/preferences/${group}`, patch),
+  getBlocked: () => req<{ blocked: BlockedUser[] }>("GET", "/preferences/blocked"),
+  block: (userId: string) => req<{ blocked: boolean }>("POST", `/preferences/block/${userId}`),
+  unblock: (userId: string) => req<{ blocked: boolean }>("DELETE", `/preferences/block/${userId}`),
+
+  // security
+  changePassword: (current_password: string, new_password: string) =>
+    req<{ success: boolean }>("POST", "/auth/password", { current_password, new_password }),
+
+  // groups + friends
+  listGroups: () => req<{ groups: GroupChat[] }>("GET", "/groups"),
+  createGroup: (name: string, member_ids: string[], avatar_url?: string) =>
+    req<{ group: GroupChat }>("POST", "/groups", { name, member_ids, avatar_url }),
+  getGroup: (id: string) => req<{ group: GroupChat; members: GroupMember[]; messages: Message[] }>("GET", `/groups/${id}`),
+  sendGroupMessage: (id: string, content: string, media_url?: string, media_type?: string) =>
+    req<{ message: Message }>("POST", `/groups/${id}/message`, { content, media_url, media_type }),
+  addGroupMembers: (id: string, user_ids: string[]) =>
+    req<{ added: string[] }>("POST", `/groups/${id}/members`, { user_ids }),
+  leaveGroup: (id: string, userId: string) =>
+    req<{ success: boolean }>("DELETE", `/groups/${id}/members/${userId}`),
+  renameGroup: (id: string, name: string) =>
+    req<{ group: GroupChat }>("PUT", `/groups/${id}`, { name }),
+
+  listFriends: () => req<{ friends: Friend[] }>("GET", "/groups/friends/list"),
+  friendRequests: () => req<{ requests: FriendRequest[] }>("GET", "/groups/friends/requests"),
+  sendFriendRequest: (userId: string) =>
+    req<{ status: "pending" | "accepted" }>("POST", `/groups/friends/request/${userId}`),
+  respondFriendRequest: (userId: string, action: "accept" | "decline") =>
+    req<{ status: "accepted" | "declined" }>("POST", `/groups/friends/respond/${userId}`, { action }),
+  searchFriends: (q: string) =>
+    req<{ users: Friend[] }>("GET", `/groups/friends/search?q=${encodeURIComponent(q)}`),
+};
+
+export type GroupChat = {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  created_by: string;
+  created_at: string;
+  last_message_at: string | null;
+  member_count?: number;
+  last_message?: {
+    content: string;
+    sender_id: string;
+    media_type: string | null;
+    created_at: string;
+  } | null;
+};
+
+export type GroupMember = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  role: "admin" | "member";
+};
+
+export type Friend = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  level: number;
+  source?: "friend" | "match";
+};
+
+export type FriendRequest = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+};
+
+export type Prefs = {
+  notifications: {
+    match: boolean; message: boolean; comment: boolean; like: boolean;
+    follow: boolean; push: boolean; email: boolean;
+  };
+  privacy: {
+    discoverable: boolean; show_age: boolean; show_distance: boolean;
+    show_online: boolean; read_receipts: boolean;
+  };
+  discover: {
+    age_min: number; age_max: number;
+    gender: "any" | "female" | "male" | "non_binary";
+    max_distance_km: number;
+  };
+};
+
+export type BlockedUser = {
+  id: string; username: string; display_name: string | null;
+  avatar_url: string | null; created_at: string;
 };
 
 // Resolve relative media URLs to absolute (backend /uploads fallback)

@@ -39,6 +39,38 @@ body {
   min-height: 100vh;
 }
 
+/* Desktop: render the app inside a phone-frame so it doesn't look like a lost column */
+@media (min-width: 768px) {
+  body {
+    background:
+      radial-gradient(80% 60% at 50% 20%, rgba(168, 85, 247, 0.2) 0%, transparent 70%),
+      linear-gradient(180deg, #0d0717 0%, #1a0e2e 50%, #0a0518 100%);
+  }
+  .app-content {
+    width: 430px;
+    max-width: calc(100vw - 32px);
+    margin: 24px auto;
+    min-height: calc(100vh - 48px) !important;
+    border-radius: 48px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 30px 80px -20px rgba(0, 0, 0, 0.6),
+      0 0 0 8px #1a0e2e,
+      0 0 0 10px rgba(255, 255, 255, 0.06),
+      0 0 120px -20px rgba(236, 72, 153, 0.3);
+    background:
+      radial-gradient(80% 60% at 20% 10%, rgba(255, 138, 195, 0.35) 0%, transparent 60%),
+      radial-gradient(70% 60% at 90% 30%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
+      radial-gradient(90% 70% at 50% 90%, rgba(80, 56, 143, 0.45) 0%, transparent 70%),
+      linear-gradient(180deg, var(--bg-from) 0%, var(--bg-via) 40%, var(--bg-to) 100%);
+  }
+  /* Bottom nav stays pinned to the phone-frame bottom, not viewport bottom */
+  .app-content nav.fixed {
+    position: absolute;
+  }
+}
+
 /* Sparkle layer */
 body::before {
   content: "";

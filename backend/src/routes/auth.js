@@ -76,6 +76,23 @@ router.post('/login', authLimiter, validate(loginSchema), async (req, res, next)
   } catch (err) { next(err); }
 });
 
+const changePasswordSchema = Joi.object({
+  current_password: Joi.string().required(),
+  new_password: Joi.string().min(8).max(128).required(),
+});
+
+router.post('/password', verifyToken, authLimiter, validate(changePasswordSchema), async (req, res, next) => {
+  try {
+    const r = await query('SELECT password_hash FROM users WHERE id = $1', [req.userId]);
+    if (r.rowCount === 0) return res.status(404).json({ error: 'User not found' });
+    const ok = await bcrypt.compare(req.body.current_password, r.rows[0].password_hash);
+    if (!ok) return res.status(401).json({ error: 'Current password is wrong', code: 'WRONG_PASSWORD' });
+    const newHash = await bcrypt.hash(req.body.new_password, 10);
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, req.userId]);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
 router.get('/me', verifyToken, async (req, res, next) => {
   try {
     const r = await query(

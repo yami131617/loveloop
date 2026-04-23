@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageCircle, Share2, Music2, MoreHorizontal, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { Heart, MessageCircle, Share2, Music2, Volume2, VolumeX, Sparkles, Compass } from "lucide-react";
 import { api, hasToken, mediaUrl, type Post } from "@/lib/api";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -28,9 +28,9 @@ export default function FeedPage() {
         <h1 className="text-2xl font-black bg-gradient-to-r from-pink-300 via-fuchsia-300 to-purple-300 text-transparent bg-clip-text">
           LoveLoop
         </h1>
-        <button className="glass w-10 h-10 rounded-full flex items-center justify-center" aria-label="More">
-          <MoreHorizontal className="w-5 h-5" />
-        </button>
+        <Link href="/discover" className="glass w-10 h-10 rounded-full flex items-center justify-center hover:bg-pink-500/20 transition" aria-label="Swipe">
+          <Compass className="w-5 h-5 text-pink-300" />
+        </Link>
       </header>
 
       <div className="max-w-md mx-auto px-4 flex flex-col gap-5 mt-3">

@@ -16,6 +16,8 @@ const cosmeticsRoutes = require('./routes/cosmetics');
 const leaderboardRoutes = require('./routes/leaderboard');
 const postsRoutes = require('./routes/posts');
 const roomsRoutes = require('./routes/rooms');
+const preferencesRoutes = require('./routes/preferences');
+const groupsRoutes = require('./routes/groups');
 const errorHandler = require('./middleware/errorHandler');
 const { runMigrations } = require('./scripts/migrate');
 const { setupSocket } = require('./socket');
@@ -83,6 +85,8 @@ app.use('/cosmetics', cosmeticsRoutes);
 app.use('/leaderboard', leaderboardRoutes);
 app.use('/posts', postsRoutes);
 app.use('/rooms', roomsRoutes);
+app.use('/preferences', preferencesRoutes);
+app.use('/groups', groupsRoutes);
 
 // Serve uploaded media when Cloudinary not configured (local disk fallback)
 const path = require('path');

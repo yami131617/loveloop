@@ -51,6 +51,14 @@ function setupSocket(server) {
       if (typeof roomId === 'string') socket.leave(`room:${roomId}`);
     });
 
+    // --- Private group chats ---
+    socket.on('join_group', (groupId) => {
+      if (typeof groupId === 'string') socket.join(`group:${groupId}`);
+    });
+    socket.on('leave_group', (groupId) => {
+      if (typeof groupId === 'string') socket.leave(`group:${groupId}`);
+    });
+
     // --- Game sync ---
     socket.on('game_answer', (data) => {
       if (data && typeof data.matchId === 'string') {

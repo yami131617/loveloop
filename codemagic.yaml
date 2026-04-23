@@ -1,0 +1,113 @@
+workflows:
+  android-debug:
+    name: LoveLoop Android (debug APK)
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      node: 20
+      java: 21
+      vars:
+        CAP_SERVER_URL: "https://loveloop.app"
+    scripts:
+      - name: Install deps
+        working_directory: web
+        script: npm ci
+      - name: Capacitor sync
+        working_directory: web
+        script: npx cap sync android
+      - name: Build APK
+        working_directory: web/android
+        script: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+    artifacts:
+      - web/android/app/build/outputs/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - hi@loveloop.app
+
+  ios-testflight:
+    name: LoveLoop iOS (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: loveloop_asc_key  # set up in Codemagic UI → Teams → Integrations
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "app.loveloop.gen"
+        CAP_SERVER_URL: "https://loveloop.app"
+      groups:
+        - app_store_credentials  # APPLE_ID, APP_STORE_APP_ID, TEAM_ID — set in Codemagic
+    scripts:
+      - name: Install npm deps
+        working_directory: web
+        script: npm ci
+      - name: Capacitor sync
+        working_directory: web
+        script: npx cap sync ios
+      - name: Install CocoaPods
+        working_directory: web/ios/App
+        script: pod install
+      - name: Set bundle id + version
+        working_directory: web/ios/App
+        script: |
+          sed -i '' "s/com.loveloop.app/$BUNDLE_ID/g" App.xcodeproj/project.pbxproj || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.$BUILD_NUMBER" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" App/Info.plist
+      - name: Automatic signing
+        script: xcode-project use-profiles
+      - name: Archive
+        working_directory: web/ios/App
+        script: |
+          xcode-project build-ipa \
+            --workspace App.xcworkspace \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - LoveLoop Testers
+
+  ios-appstore:
+    name: LoveLoop iOS (App Store release)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: loveloop_asc_key
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "app.loveloop.gen"
+        CAP_SERVER_URL: "https://loveloop.app"
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*.*.*"
+          include: true
+    scripts:
+      - working_directory: web
+        script: npm ci
+      - working_directory: web
+        script: npx cap sync ios
+      - working_directory: web/ios/App
+        script: pod install
+      - script: xcode-project use-profiles
+      - working_directory: web/ios/App
+        script: xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_app_store: true
