@@ -52,7 +52,10 @@ export default function UploadPage() {
         const j = await r.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${r.status}`);
       }
-      router.replace("/feed");
+      const j = await r.json();
+      // Smart: on mobile go to own profile to see the new post; else feed
+      const goTo = j.post?.id ? `/p/${j.post.id}` : "/feed";
+      router.replace(goTo);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "upload failed");
     } finally {

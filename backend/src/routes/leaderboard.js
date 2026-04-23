@@ -54,7 +54,7 @@ router.get('/couples', cached('couples', async () => {
        ORDER BY m.total_games_played DESC, m.matched_at ASC
        LIMIT 50`
   );
-  return { couples: r.rows };
+  return { leaderboard: r.rows };
 }));
 
 router.get('/me', verifyToken, async (req, res, next) => {

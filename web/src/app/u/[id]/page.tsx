@@ -4,7 +4,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Grid3x3, Heart, MessageCircle, UserPlus, Check } from "lucide-react";
-import { api, mediaUrl, type User, type Post } from "@/lib/api";
+import { api, hasToken, mediaUrl, type User, type Post } from "@/lib/api";
+import { useCall } from "@/components/CallProvider";
+import { Video as VideoIcon } from "lucide-react";
 
 export default function UserProfilePage() {
   const params = useParams<{ id: string }>();
@@ -14,6 +16,9 @@ export default function UserProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [matchId, setMatchId] = useState<string | null>(null);
+  const [isMe, setIsMe] = useState(false);
+  const { startCall } = useCall();
 
   useEffect(() => {
     if (!userId) return;
@@ -21,6 +26,15 @@ export default function UserProfilePage() {
       api.getProfile(userId).then((r) => setUser({ ...r.profile, interests: r.interests })).catch(() => setUser(null)),
       api.getUserPosts(userId).then((r) => setPosts(r.posts)).catch(() => setPosts([])),
     ]).finally(() => setLoading(false));
+    if (hasToken()) {
+      api.me().then((me) => {
+        if (me.user.id === userId) setIsMe(true);
+      }).catch(() => {});
+      api.getMatches().then((r) => {
+        const m = r.matches.find((x) => x.other_user_id === userId);
+        if (m) setMatchId(m.id);
+      }).catch(() => {});
+    }
   }, [userId]);
 
   async function toggleFollow() {
@@ -64,17 +78,35 @@ export default function UserProfilePage() {
             )}
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={toggleFollow}
-              className={`px-4 py-2.5 rounded-full font-bold text-sm flex items-center gap-1.5 transition ${
-                following ? "glass text-white/80" : "btn-gradient-pink text-white shadow-lg"
-              }`}
-            >
-              {following ? <><Check className="w-4 h-4" /> Following</> : <><UserPlus className="w-4 h-4" /> Follow</>}
-            </button>
-            <button className="glass w-11 h-11 rounded-full flex items-center justify-center" aria-label="message">
-              <MessageCircle className="w-4 h-4" />
-            </button>
+            {!isMe && (
+              <button
+                onClick={toggleFollow}
+                className={`px-4 py-2.5 rounded-full font-bold text-sm flex items-center gap-1.5 transition ${
+                  following ? "glass text-white/80" : "btn-gradient-pink text-white shadow-lg"
+                }`}
+              >
+                {following ? <><Check className="w-4 h-4" /> Following</> : <><UserPlus className="w-4 h-4" /> Follow</>}
+              </button>
+            )}
+            {matchId && !isMe && (
+              <>
+                <Link href={`/chats/${matchId}`} className="glass w-11 h-11 rounded-full flex items-center justify-center hover:bg-pink-500/20 transition" aria-label="message">
+                  <MessageCircle className="w-4 h-4 text-pink-300" />
+                </Link>
+                <button
+                  onClick={() => user && startCall(userId, user.display_name ?? user.username, user.avatar_url)}
+                  className="glass w-11 h-11 rounded-full flex items-center justify-center hover:bg-pink-500/20 transition"
+                  aria-label="video call"
+                >
+                  <VideoIcon className="w-4 h-4 text-pink-300" />
+                </button>
+              </>
+            )}
+            {isMe && (
+              <Link href="/settings/profile" className="glass px-4 py-2.5 rounded-full text-sm font-semibold">
+                Edit profile
+              </Link>
+            )}
           </div>
         </div>
 

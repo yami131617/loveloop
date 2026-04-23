@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Send, Image as ImageIcon, Gamepad2, Smile, Video as VideoIcon } from "lucide-react";
 import { api, hasToken, mediaUrl, type Message } from "@/lib/api";
 import { useCall } from "@/components/CallProvider";
+import { getSocket } from "@/lib/socket";
 
 type MatchLite = { id: string; other_user_id: string; other_username: string; other_display_name: string | null; other_avatar_url: string | null; relationship_level: number };
 
@@ -31,6 +32,25 @@ export default function ChatDetailPage() {
     });
     api.getMessages(matchId).then((r) => setMessages(r.messages));
   }, [matchId, router]);
+
+  // Realtime: receive messages via socket, no manual refresh needed
+  useEffect(() => {
+    const s = getSocket();
+    if (!s) return;
+    s.emit("join_match", matchId);
+    const onMsg = (m: Message) => {
+      if (m.match_id !== matchId) return;
+      setMessages((prev) => {
+        if (prev.some((x) => x.id === m.id)) return prev; // dedupe own optimistic
+        return [...prev, m];
+      });
+    };
+    s.on("message", onMsg);
+    return () => {
+      s.emit("leave_match", matchId);
+      s.off("message", onMsg);
+    };
+  }, [matchId]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

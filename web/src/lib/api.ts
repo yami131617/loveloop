@@ -98,6 +98,11 @@ async function req<T = unknown>(method: string, path: string, body?: unknown): P
     json = text;
   }
   if (!r.ok) {
+    // Smart: auto-logout on token-expired/invalid (but not on /auth/* so login errors still surface)
+    if (r.status === 401 && typeof window !== "undefined" && t && !path.startsWith("/auth/")) {
+      localStorage.removeItem("loveloop_token");
+      if (window.location.pathname !== "/") window.location.href = "/";
+    }
     const err = (json && typeof json === "object" && "error" in json ? (json as { error: string }).error : `HTTP ${r.status}`) || `HTTP ${r.status}`;
     throw new Error(err);
   }
