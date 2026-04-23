@@ -1,0 +1,33 @@
+node_modules/
+.env
+.env.local
+.env.prod
+*.log
+secrets.txt
+.tools/
+builds/
+unity-logs/
+backups/
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Mm]emoryCaptures/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
+
+# Railway
+railway-deploy-info.txt
+
+.github/workflows/
