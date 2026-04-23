@@ -98,8 +98,11 @@ async function req<T = unknown>(method: string, path: string, body?: unknown): P
     json = text;
   }
   if (!r.ok) {
-    // Smart: auto-logout on token-expired/invalid (but not on /auth/* so login errors still surface)
-    if (r.status === 401 && typeof window !== "undefined" && t && !path.startsWith("/auth/")) {
+    // Smart: auto-logout when the token we SENT is rejected.
+    // Exclude /auth/login and /auth/register only — their 401s are expected bad-credentials errors
+    // (no token was being relied on). Keep /auth/me in scope: a 401 there means our session is dead.
+    const isLoginOrRegister = path === "/auth/login" || path === "/auth/register";
+    if (r.status === 401 && typeof window !== "undefined" && t && !isLoginOrRegister) {
       localStorage.removeItem("loveloop_token");
       if (window.location.pathname !== "/") window.location.href = "/";
     }

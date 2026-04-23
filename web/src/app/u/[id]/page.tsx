@@ -22,19 +22,25 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     if (!userId) return;
-    Promise.all([
-      api.getProfile(userId).then((r) => setUser({ ...r.profile, interests: r.interests })).catch(() => setUser(null)),
-      api.getUserPosts(userId).then((r) => setPosts(r.posts)).catch(() => setPosts([])),
-    ]).finally(() => setLoading(false));
-    if (hasToken()) {
-      api.me().then((me) => {
-        if (me.user.id === userId) setIsMe(true);
-      }).catch(() => {});
-      api.getMatches().then((r) => {
-        const m = r.matches.find((x) => x.other_user_id === userId);
-        if (m) setMatchId(m.id);
-      }).catch(() => {});
-    }
+    let cancelled = false;
+    (async () => {
+      const authed = hasToken();
+      const [prof, postsR, me, matches] = await Promise.all([
+        api.getProfile(userId).catch(() => null),
+        api.getUserPosts(userId).catch(() => ({ posts: [] as Post[] })),
+        authed ? api.me().catch(() => null) : Promise.resolve(null),
+        authed ? api.getMatches().catch(() => ({ matches: [] })) : Promise.resolve({ matches: [] }),
+      ]);
+      if (cancelled) return;
+      // Commit state all-at-once so the UI never renders the "wrong" button combo first.
+      if (prof) setUser({ ...prof.profile, interests: prof.interests });
+      setPosts(postsR.posts);
+      if (me && me.user.id === userId) setIsMe(true);
+      const m = (matches.matches || []).find((x) => x.other_user_id === userId);
+      if (m) setMatchId(m.id);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [userId]);
 
   async function toggleFollow() {
